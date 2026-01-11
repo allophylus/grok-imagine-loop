@@ -59,3 +59,6 @@ If you find this tool useful, consider buying me a coffee!
 ## Disclaimer
 
 This is a third-party extension and is not affiliated with xAI or Grok. Use responsibly and adhere to the platform's terms of service.
+
+> [!CAUTION]
+> **Use at your own risk.** Automated interactions may be flagged as bot activity by Grok/xAI. Excessive or unnatural usage patterns could lead to rate limits, account suspension, or IP bans. The authors of this extension are not responsible for any actions taken against your account.
