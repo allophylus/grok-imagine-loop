@@ -7,93 +7,382 @@
 </head>
 
 <body>
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
-      <img src="../icons/icon48.png" style="width: 24px; height: 24px;">
-      Grok Loop
-    </h3>
-    <button id="popOutBtn" title="Pop Out to Window"
-      style="width: auto; padding: 4px 8px; font-size: 16px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px;">
-      ⇱
-    </button>
+
+  <!-- Tab Header -->
+  <div class="tabs-header">
+    <button class="tab-btn active" data-tab="tab-main">Main</button>
+    <button class="tab-btn" data-tab="tab-settings">Settings</button>
+    <button class="tab-btn" data-tab="tab-about">About</button>
   </div>
 
-  <div class="input-group">
-    <label for="initialImage">Initial Image (Optional)</label>
-    <!-- Standard input for maximum compatibility with logic, styled simply -->
-    <input type="file" id="initialImage" accept="image/*">
-    <div id="restoredImageIndicator"
-      style="display: none; flex-direction: column; margin-top: 8px; font-size: 11px; color: var(--success); gap: 5px;">
-      <img id="restoredImagePreview"
-        style="max-width: 100%; max-height: 120px; object-fit: contain; border-radius: 4px; border: 1px solid #333; background: #000;">
-      <div style="display: flex; align-items: center; gap: 5px;">
-        <span id="restoredImageText"></span>
-        <button id="clearImageBtn"
-          style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; text-decoration: underline; font-size: 11px;">Clear</button>
+  <!-- MAIN TAB -->
+  <div id="tab-main" class="tab-content active">
+    <!-- Header/Logo -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+        <img src="../icons/icon48.png" style="width: 24px; height: 24px; background: #000; border-radius: 6px;">
+        Grok Imagine Loop
+      </h3>
+      <span id="versionNumber" style="font-size: 10px; color: var(--text-dim);"></span>
+    </div>
+
+    <!-- Global Initial Image -->
+    <div class="input-group">
+      <label for="initialImage" id="initialImageLabel">Initial Image (Scene 1 Only)</label>
+
+      <!-- Default File Input -->
+      <input type="file" id="initialImage" accept="image/*">
+
+      <!-- Preview overlay (Hidden by default) -->
+      <div id="restoredImageIndicator" style="display: none; position: relative; width: fit-content; margin-top: 8px;">
+        <img id="restoredImagePreview"
+          style="max-width: 100%; max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #333; background: #000; display: block;">
+
+        <button id="clearImageBtn" title="Remove Image"
+          style="position: absolute; top: -8px; right: -8px; background: #f55; color: white; border: 2px solid #222; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; line-height: 1; padding: 0;">&times;</button>
+
+        <span id="restoredImageText" style="display: none;"></span>
       </div>
     </div>
-  </div>
 
-  <div class="input-group">
-    <label for="prompt">Prompts (One per line)</label>
-    <textarea id="prompt" placeholder="Enter your video prompts here...
-Example:
-A futuristic city...
-The city lights up at night..."></textarea>
-  </div>
-
-  <div class="row">
-    <div class="col input-group">
-      <label for="loops">Scenes</label>
-      <input type="number" id="loops" value="3" min="1">
+    <!-- Debug Log Viewer (Moved here) -->
+    <div id="debugLogContainer"
+      style="display: none; margin-bottom: 12px; border-top: 1px solid #333; padding-top: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <h4 style="margin: 0; font-size: 11px; color: #888;">Debug Logs</h4>
+        <button id="downloaddebugLogsButton" title="Download Logs & Config"
+          style="background: none; border: none; color: var(--primary); font-size: 10px; cursor: pointer; padding: 0;">Download</button>
+      </div>
+      <div id="debugLogViewer" style="
+            background: #111; 
+            color: #0f0; 
+            font-family: monospace; 
+            font-size: 10px; 
+            padding: 5px; 
+            height: 100px; 
+            overflow-y: auto; 
+            border: 1px solid #333; 
+            border-radius: 4px; 
+            white-space: pre-wrap;
+            word-break: break-all;
+        "></div>
     </div>
-    <div class="col input-group">
-      <label for="timeout">Timeout (s)</label>
-      <input type="number" id="timeout" value="120" min="5">
+
+    <!-- Bulk Prompts Input (Synced) -->
+    <div class="input-group">
+      <label for="bulkPrompts">Prompts (One per line)</label>
+      <textarea id="bulkPrompts" placeholder="Paste your script here...&#10;Line 1 = Scene 1&#10;Line 2 = Scene 2"
+        style="height: 100px;"></textarea>
+    </div>
+
+    <!-- Scenes List (Visual & Images) -->
+    <label style="margin-bottom: 8px;">Scene Details</label>
+    <div id="scenes-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+      <!-- Scenes injected here -->
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+      <button id="addSceneBtn"
+        style="flex: 1; padding: 8px; background: #333; border: 1px solid #444; color: #fff; border-radius: 4px; cursor: pointer;"
+        title="Add a new empty scene to the end of the list.">+
+        Add Scene</button>
+      <button id="clearScenesBtn"
+        style="width: auto; padding: 8px; background: #333; border: 1px solid #444; color: #f55; border-radius: 4px; cursor: pointer;"
+        title="Remove all scenes and clear the list.">Clear</button>
+    </div>
+
+    <!-- Actions -->
+    <button id="startBtn" title="Start or Pause the automation loop.">Start Generation</button>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 class="tab-title" style="margin: 0;">Settings</h3>
+      <button id="resetInputsBtn" title="Reset to Defaults"
+        style="background: none; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Saved Loops Manager -->
+    <div style="background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-bottom: 20px;">
+      <label
+        style="color: var(--primary); font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px;">SAVED
+        CONFIGURATIONS</label>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <select id="savedLoopsSelect"
+          style="flex: 1; background: #111; border: 1px solid #444; color: #eee; padding: 6px; border-radius: 4px; font-size: 12px;"
+          title="Select a previously saved configuration to load.">
+          <option value="">-- Select a Preset --</option>
+        </select>
+        <button id="loadConfigBtn"
+          style="background: #444; color: #fff; border: 1px solid #555; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 11px;"
+          title="Load the selected configuration (Overwrites current settings).">Load</button>
+        <button id="deleteConfigBtn"
+          style="background: #333; color: #f55; border: 1px solid #444; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 16px; line-height: 1;"
+          title="Permanently delete the selected configuration preset.">&times;</button>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="saveConfigName" placeholder="Name this configuration..."
+          style="flex: 1; background: #111; border: 1px solid #444; color: #eee; padding: 6px; border-radius: 4px; font-size: 12px;"
+          title="Enter a name for the new configuration preset.">
+        <button id="saveConfigBtn"
+          style="background: var(--primary); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;"
+          title="Save the current scenes and settings as a new preset.">Save
+          As New</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group">
+        <label for="timeout"
+          title="Maximum time (in seconds) to wait for a video status to change from 'working' to 'done' or 'error'.">Timeout
+          (s)</label>
+        <input type="number" id="timeout" value="120" min="30" title="Default: 120s. Increase if generations are slow.">
+      </div>
+      <div class="col input-group">
+        <label for="maxDelay" title="Maximum duration for the randomized 'human-like' delay between segments.">Wait
+          (s)</label>
+        <input type="number" id="maxDelay" value="15" min="5"
+          title="The delay will be random between 33% and 100% of this value.">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group">
+        <label for="retryLimit"
+          title="Number of times to retry a segment if it fails due to timeout or network error.">Retries</label>
+        <input type="number" id="retryLimit" value="3" min="0"
+          title="Retries for network/timeout errors (not moderation).">
+      </div>
+      <div class="col input-group">
+        <label for="moderationRetryLimit"
+          title="Number of times to retry if 'Content Moderated' is detected (when Pause on Moderation is OFF).">Mod
+          Retries</label>
+        <input type="number" id="moderationRetryLimit" value="2" min="0"
+          title="Specific retry limit for Content Moderation errors.">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="birthYear" title="Year to automatically select if the Age Verification modal appears.">Birth Year (Age
+        Check)</label>
+      <input type="number" id="birthYear" value="2000" min="1900" max="2024" title="Used for auto-passing age gates.">
+    </div>
+
+    <div class="input-group">
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Show the floating 'Grok Imagine Loop' dashboard overlay on the page.">
+        <input type="checkbox" id="showDashboard" checked style="width: auto; margin: 0;">
+        <label for="showDashboard" style="margin: 0; cursor: pointer;">Show Dashboard Overlay</label>
+      </div>
+    </div>
+
+
+
+    <div class="input-group" style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Wait for and capture the High Quality upscaled version of the video.">
+        <input type="checkbox" id="upscale" checked style="width: auto; margin: 0;">
+        <label for="upscale" style="margin: 0; cursor: pointer;">Upscale Result (High Quality)</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Automatically download the video file (MP4) to your computer when finished.">
+        <input type="checkbox" id="autoDownload" checked style="width: auto; margin: 0;">
+        <label for="autoDownload" style="margin: 0; cursor: pointer;">Auto-Download Videos</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Automatically click 'Skip' if an A/B test or feedback modal appears.">
+        <input type="checkbox" id="autoSkip" checked style="width: auto; margin: 0;">
+        <label for="autoSkip" style="margin: 0; cursor: pointer;">Auto-Skip A/B Tests</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Use the Global Initial Image for EVERY scene, instead of using the previous video's last frame.">
+        <input type="checkbox" id="reuseInitialImage" style="width: auto; margin: 0;">
+        <label for="reuseInitialImage" style="margin: 0; cursor: pointer;">Reuse Initial Image (Global)</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="If a segment fails after retries, skip it and continue to the next one instead of stopping the loop.">
+        <input type="checkbox" id="continueOnFailure" style="width: auto; margin: 0;">
+        <label for="continueOnFailure" style="margin: 0; cursor: pointer;">Skip Failed Segments</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="If checked: Pause immediately on 'Content Moderated'. If unchecked: Retry up to Mod Retries limit.">
+        <input type="checkbox" id="pauseOnModeration" style="width: auto; margin: 0;">
+        <label for="pauseOnModeration" style="margin: 0; cursor: pointer;">Pause on Moderation</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
+        title="Show a scrolling view of the extension's internal logs in the Active Run dashboard.">
+        <input type="checkbox" id="showDebugLogs" style="width: auto; margin: 0;">
+        <label for="showDebugLogs" style="margin: 0; cursor: pointer;">Show Debug Logs</label>
+      </div>
+    </div>
+
+
+
+    <!-- Readonly Loops Display (Hidden or Informational) -->
+    <div style="display: none;">
+      <input type="number" id="loops">
     </div>
   </div>
 
-  <div class="input-group" style="display: flex; flex-direction: column; gap: 8px;">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <input type="checkbox" id="upscale" style="width: auto; margin: 0;">
-      <label for="upscale" style="margin: 0; cursor: pointer;">Upscale Result (High Quality)</label>
+  <!-- RUN TAB (Active Dashboard) -->
+  <div id="tab-run" class="tab-content" style="padding-bottom: 60px;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333;">
+      <div>
+        <h3 style="margin: 0; font-size: 14px; color: #fff;">Active Run</h3>
+        <span id="runStatusText" style="font-size: 11px; color: var(--success);">Running...</span>
+      </div>
+      <button id="runStopBtn"
+        style="background: #333; color: #f55; border: 1px solid #522; font-size: 11px; padding: 4px 8px;">Stop</button>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <input type="checkbox" id="autoDownload" style="width: auto; margin: 0;">
-      <label for="autoDownload" style="margin: 0; cursor: pointer;">Auto-Download Videos</label>
+
+    <!-- Live Scene List -->
+    <div id="runScenesList" style="display: flex; flex-direction: column; gap: 8px;">
+      <!-- Injected via JS -->
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <input type="checkbox" id="autoSkip" style="width: auto; margin: 0;">
-      <label for="autoSkip" style="margin: 0; cursor: pointer;">Auto-Skip A/B Tests</label>
+
+
+
+    <!-- Sticky Footer Controls -->
+    <div
+      style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 1px solid #333; padding: 10px; display: flex; gap: 10px; z-index: 100;">
+      <button id="runPauseBtn" style="flex: 1; background: #444; color: #fff; border: none;">Pause</button>
+      <button id="runResumeBtn"
+        style="flex: 1; display: none; background: var(--primary); color: #fff; border: none;">Resume</button>
     </div>
   </div>
-  </div>
-  </div>
 
-  <button id="resumeBtn" style="display: none;">Resume Previous Session</button>
-  <button id="startBtn">Start Generation</button>
+  <!-- ABOUT TAB -->
+  <div id="tab-about" class="tab-content">
+    <h3 class="tab-title">About</h3>
+    <div class="about-section">
+      <p style="margin: 0 0 12px;">Automate Grok Imagine looped videos.</p>
+      <ul style="margin-bottom: 12px; padding-left: 20px;">
+        <li><strong>Smart Loops:</strong> Auto-Frame Extraction & Chaining</li>
+        <li><strong>Quality & Files:</strong> Upscaling & Auto-Download Support</li>
+        <li><strong>Resilience:</strong> Mod/Timeout Retries & State Saving</li>
+        <li><strong>Control:</strong> Dynamic Scenes, Cascade Regen, & Pause</li>
+        <li><strong>Workflow:</strong> Side Panel Mode & Detachable Window</li>
+        <li><strong>Anti-Bot:</strong> Human-like Typing & Randomized Delays</li>
+        <li><strong>New in v1.5:</strong> Log Viewer, Dashboard Toggle & Global Controls</li>
+      </ul>
+    </div>
 
-  <div style="text-align: center; margin-top: 15px; margin-bottom: 5px;">
-    <button id="resetInputsBtn"
-      style="background: none; border: none; color: var(--text-dim); font-size: 11px; cursor: pointer; padding: 0; text-decoration: underline;">Reset
-      Inputs</button>
-  </div>
-
-  <div id="status" class="status"></div>
-
-  <hr>
-
-  <div class="about-section">
-    <h4>About</h4>
-    <p style="margin: 0 0 8px;">Automate Grok Imagine looped videos.</p>
-    <ul style="margin-bottom: 12px;">
-      <li>Auto-Looping & Frame Extraction</li>
-      <li>Pause/Resume Support</li>
-      <li>Anti-Bot Protection</li>
-    </ul>
-    <div style="display: flex; gap: 8px; margin-top: 5px;">
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
       <button id="githubBtn">GitHub</button>
-      <button id="kofiBtn">Buy ☕</button>
+      <button id="kofiBtn">Buy Coffee ☕</button>
+    </div>
+
+    <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #555;">
+      <p style="margin: 0;">Made with ❤️ by Fen Pang</p>
+      <p style="margin: 4px 0 0;">Powered by Google Antigravity.</p>
+      <div id="aboutVersion" style="margin-top: 8px; font-size: 10px; color: #444;"></div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE -->
+  <template id="scene-template">
+    <div class="scene-item"
+      style="background: #222; border: 1px solid #333; border-radius: 6px; padding: 10px; position: relative; padding-top: 25px;">
+
+      <span class="scene-number"
+        style="position: absolute; top: 5px; left: 10px; font-size: 11px; color: #888; font-weight: bold;">Scene
+        1</span>
+
+      <button class="remove-scene-btn" title="Remove Scene"
+        style="position: absolute; top: 5px; right: 5px; z-index: 10; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: none; color: #f55; cursor: pointer; font-size: 16px; line-height: 1;">&times;</button>
+
+      <button class="insert-scene-btn" title="Insert Scene Before"
+        style="position: absolute; top: 5px; right: 30px; z-index: 10; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: none; color: var(--success); cursor: pointer; font-size: 14px; line-height: 1;">+</button>
+
+      <!-- New Header Controls (Hidden by default) -->
+      <button class="header-download-btn" title="Download Video"
+        style="display: none; position: absolute; top: 5px; right: 55px; z-index: 10; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; align-items: center; justify-content: center; border: none; color: #aaa; cursor: pointer; padding: 4px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+
+      <button class="header-regen-btn" title="Regenerate Scene"
+        style="display: none; position: absolute; top: 5px; right: 80px; z-index: 10; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; align-items: center; justify-content: center; border: none; color: var(--primary); cursor: pointer; padding: 4px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+
+      <textarea class="scene-prompt" placeholder="Enter prompt..."
+        style="width: 100%; height: 60px; background: #111; border: 1px solid #333; color: #ddd; border-radius: 4px; padding: 5px; font-size: 12px; margin-bottom: 5px; resize: vertical;"
+        title="Enter the text prompt for this video segment."></textarea>
+
+      <div class="scene-image-container">
+        <label class="scene-img-label" style="display: block; font-size: 10px; color: #666; margin-bottom: 2px;"
+          title="Information about which image will be used as the start frame for this scene.">
+          CUSTOM START IMAGE (OVERRIDE)
+        </label>
+
+        <!-- File Input (Shown when no image) -->
+        <input type="file" class="scene-file-input" accept="image/*" style="font-size: 10px; color: #888; width: 100%;"
+          title="Upload a custom start image for this specific scene (Overrides the previous frame loop).">
+
+        <!-- Image Preview Wrapper (Shown when image exists) -->
+        <div class="scene-preview-wrapper"
+          style="display: none; position: relative; width: fit-content; margin-top: 5px;">
+          <img class="scene-img-preview"
+            style="max-width: 100%; max-height: 100px; border-radius: 4px; border: 1px solid #444; display: block;"
+            title="Preview of the custom start image.">
+          <button class="scene-clear-img-btn" title="Remove Image"
+            style="position: absolute; top: -6px; right: -6px; background: #f55; color: white; border: 2px solid #222; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; line-height: 1; padding: 0;">&times;</button>
+        </div>
+
+        <!-- Result Video & Controls (Injected at Runtime) -->
+        <div class="scene-result-video"
+          style="display: none; margin-top: 10px; border-top: 1px solid #333; padding-top: 8px;">
+          <video controls style="width: 100%; border-radius: 4px; margin-bottom: 5px;"></video>
+          <div class="scene-actions" style="display: flex; gap: 8px; justify-content: flex-end;">
+            <!-- JS Injects Buttons Here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Video Container -->
+      <div class="scene-result-video"
+        style="display: none; margin-top: 10px; border-top: 1px solid #333; padding-top: 8px;">
+        <label style="display: block; font-size: 10px; color: var(--success); margin-bottom: 4px;">GENERATED
+          VIDEO</label>
+        <video controls style="width: 100%; border-radius: 4px; border: 1px solid #444; margin-bottom: 8px;"></video>
+
+        <!-- Actions -->
+        <div class="scene-actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+    </div>
+  </template>
+
+  <!-- Custom Modal -->
+  <div id="custom-modal-overlay" class="modal-overlay" style="display: none;">
+    <div class="custom-modal">
+      <h3 id="modal-title">Confirm</h3>
+      <p id="modal-message">Are you sure?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn">Cancel</button>
+        <button id="modal-confirm-btn">Confirm</button>
+      </div>
     </div>
   </div>
 

@@ -22,6 +22,64 @@ if (window.GrokLoopInjected) {
         config: { timeout: 30000 }
     };
 
+    // Load saved config immediately for logging/persistence
+    chrome.storage.local.get(['grokLoopConfig'], (res) => {
+        if (res.grokLoopConfig) {
+            state.config = { ...state.config, ...res.grokLoopConfig };
+            console.log('[Content] Loaded initial config:', state.config);
+        }
+    });
+
+    // --- Console Override (Log Streaming) ---
+    const originalConsole = {
+        log: console.log,
+        warn: console.warn,
+        error: console.error
+    };
+
+    function broadcastLog(level, args) {
+        // Only send if configured
+        const shouldSend = state.config && state.config.showDebugLogs;
+
+        // Debug the debugger:
+        // originalConsole.log('[Content Debug] Broadcast?', shouldSend, state.config);
+
+        if (shouldSend) {
+            try {
+                const safeArgs = args.map(a => {
+                    try {
+                        if (typeof a === 'object') return JSON.parse(JSON.stringify(a));
+                        return a;
+                    } catch (e) {
+                        return String(a);
+                    }
+                });
+
+                chrome.runtime.sendMessage({
+                    action: 'LOG_ENTRY',
+                    payload: { level: level, args: safeArgs }
+                }).catch(err => {
+                    // originalConsole.warn('[Content Debug] Send failed:', err);
+                });
+            } catch (e) {
+                // originalConsole.error('[Content Debug] Broadcast Error:', e);
+            }
+        }
+    }
+
+    console.log = (...args) => {
+        originalConsole.log.apply(console, args);
+        broadcastLog('log', args);
+    };
+    console.warn = (...args) => {
+        originalConsole.warn.apply(console, args);
+        broadcastLog('warn', args);
+    };
+    console.error = (...args) => {
+        originalConsole.error.apply(console, args);
+        broadcastLog('error', args);
+    };
+
     // --- DOM Utilities ---
     function createEl(tag, className, text = '') {
         const el = document.createElement(tag);
@@ -330,6 +388,34 @@ if (window.GrokLoopInjected) {
                         }
                     }
                 }
+
+                // Check for Content Moderation / Rate Limit via BROAD Text Scan
+                // (More robust than finding specific elements which might change classes)
+                const bodyText = document.body.innerText;
+
+                if (bodyText.includes('Rate limit reached') || bodyText.includes('Upgrade to unlock more')) {
+                    console.warn('Rate Limit Detected (Text Scan)!');
+                    cleanup();
+                    reject(new Error('Rate Limit Reached'));
+                    return;
+                }
+
+                if (bodyText.includes('Content Moderated') || bodyText.includes('Try a different idea')) {
+                    // Verify it's not just in the prompt textarea
+                    // Find the element containing this text to be sure it's an alert/toast
+                    const hints = Array.from(document.querySelectorAll('div, span, p')).filter(el =>
+                        el.innerText && (el.innerText.includes('Content Moderated') || el.innerText.includes('Try a different idea'))
+                        && el.offsetParent !== null
+                    );
+
+                    // If we found a visible element with this text, likely the toast
+                    if (hints.length > 0) {
+                        console.warn('Content Moderation Detected (Text Scan)!');
+                        cleanup();
+                        reject(new Error('Content Moderated'));
+                        return;
+                    }
+                }
             };
 
             const observer = new MutationObserver(check);
@@ -494,10 +580,12 @@ if (window.GrokLoopInjected) {
             if (state.config.autoSkip) {
                 console.log('Auto-Skip enabled. Clicking Skip...');
                 await simulateClick(skipBtn);
-                // Wait for skip to process and potentially new video to settle
+                // Wait for skip to process
                 await new Promise(r => setTimeout(r, 2000));
-                // Re-verify video presence
-                return waitForVideoResponse();
+
+                // Do NOT wait for a new video. The video is likely already there (the one we just generated).
+                // Returning null keeps the previously detected videoUrl in processSegment.
+                return null;
             } else {
                 console.log('Auto-Skip disabled. Waiting for user selection...');
                 // Poll until Skip button is GONE (meaning user selected something)
@@ -592,6 +680,25 @@ if (window.GrokLoopInjected) {
             } else {
                 window.addEventListener('DOMContentLoaded', append);
             }
+
+            // Init visibility from storage
+            chrome.storage.local.get(['grokLoopConfig'], (res) => {
+                const cfg = res.grokLoopConfig || {};
+                console.log('[Content] Dashboard checking storage. Show?', cfg.showDashboard);
+
+                // Strict check: Only hide if explicitly false
+                if (cfg.showDashboard === false) {
+                    this.setVisibility(false);
+                } else {
+                    // Default is visible (flex)
+                }
+            });
+        }
+
+        setVisibility(visible) {
+            if (this.root) {
+                this.root.style.display = visible ? '' : 'none';
+            }
         }
 
         render() {
@@ -675,13 +782,26 @@ if (window.GrokLoopInjected) {
 
                     const actions = createEl('div', 'segment-actions');
                     if (seg.videoUrl) {
-                        const dlBtn = createEl('button', 'action-btn secondary', 'Download');
+                        const dlBtn = createEl('button', 'action-btn secondary', '⬇');
+                        dlBtn.title = 'Download Video';
+                        dlBtn.style.fontSize = '14px';
+                        dlBtn.style.padding = '2px 6px';
                         dlBtn.onclick = () => window.LoopManager.downloadSegment(index);
                         actions.appendChild(dlBtn);
                     }
                     if (seg.status !== 'working') {
-                        const regenBtn = createEl('button', 'action-btn', 'Regenerate');
-                        regenBtn.onclick = () => window.LoopManager.regenerateSegment(index);
+                        // Icon Button for Regen
+                        const regenBtn = createEl('button', 'action-btn', '↻');
+                        regenBtn.title = `Regenerate Scene ${index + 1}`;
+                        regenBtn.style.fontSize = '14px';
+                        regenBtn.style.padding = '2px 6px';
+
+                        regenBtn.onclick = () => {
+                            // "Act similar to the pop up to allow user to regen a scene or all the scenes after"
+                            if (confirm(`Regenerate Scene ${index + 1}?\n\n• OK: Regenerate this scene AND cascaded updates for subsequent scenes.\n• Cancel: Abort.`)) {
+                                window.LoopManager.regenerateSegment(index);
+                            }
+                        };
                         actions.appendChild(regenBtn);
                     }
                     card.appendChild(actions);
@@ -714,6 +834,23 @@ if (window.GrokLoopInjected) {
 
         update() {
             this.render();
+            // Broadcast state to Popup
+            try {
+                chrome.runtime.sendMessage({
+                    action: 'LOOP_STATE_UPDATE',
+                    payload: {
+                        isRunning: state.isRunning,
+                        currentSegmentIndex: state.currentSegmentIndex,
+                        segments: state.segments.map(s => ({
+                            prompt: s.prompt,
+                            status: s.status,
+                            videoUrl: s.videoUrl
+                        }))
+                    }
+                }).catch(() => {
+                    // Popup likely closed, ignore error
+                });
+            } catch (e) { }
         }
     }
 
@@ -731,13 +868,28 @@ if (window.GrokLoopInjected) {
             if (state.isRunning) return;
 
             state.config = {
+                ...state.config, // Preserve existing (like storage loaded debug flags)
                 timeout: (payload.timeout || 30) * 1000,
+                maxDelay: payload.maxDelay || 15,
                 upscale: payload.upscale,
                 autoDownload: payload.autoDownload,
-                autoSkip: payload.autoSkip
+                autoSkip: payload.autoSkip,
+                reuseInitialImage: payload.reuseInitialImage,
+                pauseOnModeration: payload.pauseOnModeration,
+                showDebugLogs: payload.showDebugLogs !== undefined ? payload.showDebugLogs : state.config.showDebugLogs,
+                showDashboard: payload.showDashboard !== undefined ? payload.showDashboard : state.config.showDashboard,
+                moderationRetryLimit: payload.moderationRetryLimit || 2,
+                initialImage: payload.initialImage ? dataURItoBlob(payload.initialImage) : null
             };
 
-            state.segments = payload.prompts.map((p, i) => ({
+            // Map Payload scenes to Segments (Convert DataURLs to Blobs)
+            state.segments = payload.scenes ? payload.scenes.map((s, i) => ({
+                id: i,
+                prompt: s.prompt,
+                inputImage: s.inputImage ? dataURItoBlob(s.inputImage) : null,
+                videoUrl: null,
+                status: 'pending'
+            })) : payload.prompts.map((p, i) => ({ // Fallback for legacy calls
                 id: i,
                 prompt: p,
                 inputImage: null,
@@ -745,29 +897,23 @@ if (window.GrokLoopInjected) {
                 status: 'pending'
             }));
 
-            if (payload.initialImage) {
-                state.segments[0].inputImage = dataURItoBlob(payload.initialImage);
+            // Handle Scene 1 Fallback if no specific input image but global exists (and NOT reuse, to behave like legacy "Start with Image")
+            // Actually, processSegment handles this via state.config.initialImage logic. 
+            // But strict "Scene 1 Only" logic usually implies Scene 1 gets it explicitly.
+            if (!state.config.reuseInitialImage && state.config.initialImage && !state.segments[0].inputImage) {
+                state.segments[0].inputImage = state.config.initialImage;
             }
 
-            const expandedSegments = [];
-            for (let i = 0; i < payload.loops; i++) {
-                const sourcePromptIndex = i % payload.prompts.length;
-                expandedSegments.push({
-                    id: i,
-                    prompt: payload.prompts[sourcePromptIndex],
-                    inputImage: (i === 0 && payload.initialImage) ? dataURItoBlob(payload.initialImage) : null,
-                    status: 'pending'
-                });
-            }
-            state.segments = expandedSegments;
+            // REMOVED: Legacy Loop Expansion (was causing crash)
 
             state.isRunning = true;
             state.currentSegmentIndex = 0;
             this.dashboard.update();
 
-            if (this.dashboard.root.style.display === 'none') {
-                this.dashboard.root.style.display = 'flex';
-            }
+            // Respect user preference for dashboard visibility
+            // Default to true if undefined (for back-compat), but popup sends it now.
+            const shouldShow = (state.config.showDashboard !== false);
+            this.dashboard.setVisibility(shouldShow);
 
             await this.processQueue();
         },
@@ -812,9 +958,86 @@ if (window.GrokLoopInjected) {
             chrome.storage.local.set({ 'grokLoopState': savePayload });
         },
 
-        togglePause() {
-            state.isRunning = !state.isRunning;
-            this.dashboard.update();
+        togglePause(shouldResume, resumePayload) {
+            state.isRunning = shouldResume;
+
+            if (shouldResume) {
+                console.log('Resuming loop...');
+
+                // Merge Payload Updates (if provided)
+                if (resumePayload && resumePayload.scenes) {
+                    console.log('Merging updated scenes from Resume payload...');
+                    resumePayload.scenes.forEach((updatedScene, i) => {
+                        // Only update future or current segments. Don't touch history.
+                        // Actually, user might edit the current one to retry.
+                        if (i >= state.currentSegmentIndex && i < state.segments.length) {
+                            state.segments[i].prompt = updatedScene.prompt;
+                            // Update image only if strictly provided? 
+                            // Or just overwrite.
+                            // Careful: if inputImage is null/undefined in payload, it might wipe existing extraction.
+                            // But popup sends what it has.
+                            if (updatedScene.inputImage !== undefined) {
+                                state.segments[i].inputImage = updatedScene.inputImage; // DataURL or null
+                            }
+                        }
+                    });
+
+                    // Also update future segments list if length changed?
+                    // For now assuming length is constant for simplicity of "update".
+                    // If length matches, we just updated props.
+                }
+
+                this.dashboard.update();
+
+                // If we were stuck in a loop/delay, state.isRunning=true will unlock it.
+                // If we were effectively stopped, we might need to kick processQueue?
+                // But loop is usually:
+                // while(state.isRunning) { ... }
+                // If we set isRunning=false, the loop exits `break`.
+                // So we DO need to re-trigger `processQueue` if it fully stopped.
+
+                // Check if loop is active
+                // A simple way is to check if we are 'working'
+
+                // Actually, if we Pause, the `start()` loop breaks (line 917: `if (!state.isRunning) break;`).
+                // So valid Resume must restart the queue from current index.
+                this.processQueue();
+            } else {
+                console.log('Pausing loop...');
+                this.dashboard.update();
+                // The running loop will hit `if (!state.isRunning)` and break.
+            }
+        },
+
+
+        async waitForVideoInputState() {
+            // Wait for the UI to recognize the image upload
+            console.log('Waiting for image upload to process (Looking for Placeholder/Button)...');
+
+            // Allow up to 20 seconds for upload processing
+            for (let i = 0; i < 40; i++) {
+                // 1. Placeholder Check (Targeted)
+                const inputs = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
+                const foundPlaceholder = inputs.some(el => {
+                    const ph = el.getAttribute('placeholder');
+                    return ph && (ph.includes('Type to customize video') || ph.includes('Customize video'));
+                });
+
+                // 2. Button State Check (Backup)
+                const makeBtn = Array.from(document.querySelectorAll('button')).find(b =>
+                    b.innerText.includes('Make video') && !b.disabled && !b.classList.contains('disabled')
+                );
+
+                if (foundPlaceholder || makeBtn) {
+                    console.log('Upload success confirmed.');
+                    await new Promise(r => setTimeout(r, 1000)); // Safety cooldown
+                    return;
+                }
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            console.warn('Timed out waiting for upload indicator.');
+            throw new Error('Image Upload Failed (Timeout)');
         },
 
         async processQueue() {
@@ -830,15 +1053,7 @@ if (window.GrokLoopInjected) {
 
                 if (state.segments[i].status === 'done') continue;
 
-                if (i > 0) {
-                    const delay = Math.floor(Math.random() * (60000 - 20000 + 1)) + 20000;
-                    console.log(`Waiting for human-like delay (${(delay / 1000).toFixed(1)}s) before next segment...`);
 
-                    for (let d = 0; d < delay; d += 1000) {
-                        if (!state.isRunning) break;
-                        await new Promise(r => setTimeout(r, 1000));
-                    }
-                }
 
                 if (!state.isRunning) {
                     console.log('Loop paused during delay.');
@@ -865,6 +1080,7 @@ if (window.GrokLoopInjected) {
         async processSegment(index) {
             const seg = state.segments[index];
             const maxRetries = 2;
+            let modAttempts = 0; // Track moderation retries separately
 
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
                 if (!state.isRunning) return;
@@ -876,7 +1092,9 @@ if (window.GrokLoopInjected) {
                     this.dashboard.update();
 
                     // 1. Input Image
-                    if (!seg.inputImage && index > 0) {
+                    // 1. Input Image (Late Extraction for chaining)
+                    // Only extract if we are NOT reusing the global image
+                    if (!seg.inputImage && index > 0 && !state.config.reuseInitialImage) {
                         const prevSeg = state.segments[index - 1];
                         if (prevSeg.videoUrl) {
                             console.log(`Extracting last frame from Segment ${index} (Late Extract)...`);
@@ -884,13 +1102,46 @@ if (window.GrokLoopInjected) {
                         } else {
                             throw new Error(`Previous segment ${index} has no output video to chain from.`);
                         }
-                    } else if (index === 0 && !seg.inputImage) {
-                        console.warn('Initial segment missing input image.');
                     }
 
-                    if (seg.inputImage) {
-                        const base64 = await blobToBase64(seg.inputImage);
+                    // 1. Upload/Prepare Image
+                    const isFirst = (index === 0);
+                    const reuseImage = state.config.reuseInitialImage;
+
+                    // Determine which image to use
+                    // Priority: 
+                    // 1. Custom Image for this segment (User Uploaded)
+                    // 2. Extracted Frame (Loop Mode) - implicitly stored in seg.inputImage by previous step
+                    // 3. Global Initial Image (If Reuse is ON, or if First Segment)
+
+                    let imageToUpload = seg.inputImage;
+
+                    // Fallbacks
+                    if (!imageToUpload) {
+                        if (reuseImage && state.config.initialImage) { // Only use initial image if reuse is ON and it exists
+                            imageToUpload = state.config.initialImage;
+                            console.log('Using global initial image (Reuse ON)...');
+                        } else if (isFirst && state.config.initialImage) { // If first segment and initial image exists
+                            imageToUpload = state.config.initialImage;
+                            console.log('Using global initial image (First Segment)...');
+                        } else {
+                            // Loop Mode fallback (if extraction failed or wasn't set)
+                            if (state.lastGeneratedImage) {
+                                console.log('Using last generated frame (Fallback)...');
+                                imageToUpload = state.lastGeneratedImage;
+                            }
+                        }
+                    } else {
+                        console.log('Using pre-defined input image (Custom or Extracted)...');
+                    }
+
+                    if (imageToUpload) {
+                        console.log(`Uploading input image for Segment ${index + 1}...`);
+                        const base64 = await blobToBase64(imageToUpload);
                         await uploadImageToGrok(base64);
+                        await this.waitForVideoInputState();
+                    } else {
+                        console.log('No input image found for this segment. Proceeding text-only (or starting fresh)...');
                     }
 
                     // 2. Prompt
@@ -934,14 +1185,42 @@ if (window.GrokLoopInjected) {
                         }
                     }
 
-                    // Proactive Extraction
-                    if (index + 1 < state.segments.length) {
-                        console.log(`Proactively extracting frame for Segment ${index + 2}...`);
-                        try {
-                            const nextFrame = await extractLastFrame(videoUrl);
-                            state.segments[index + 1].inputImage = nextFrame;
-                        } catch (e) {
-                            console.warn('Proactive extraction failed (will retry on next step):', e);
+                    // Proactive Extraction (Only if NOT reusing initial image)
+                    if (index + 1 < state.segments.length && !state.config.reuseInitialImage) {
+                        const nextSeg = state.segments[index + 1];
+
+                        // IMPORTANT: Do NOT overwrite if user provided a custom image!
+                        if (!nextSeg.inputImage) {
+                            console.log(`Proactively extracting frame for Segment ${index + 2}...`);
+                            try {
+                                const nextFrame = await extractLastFrame(videoUrl);
+                                nextSeg.inputImage = nextFrame;
+                                state.lastGeneratedImage = nextFrame; // Update global backup
+                            } catch (e) {
+                                console.warn('Proactive extraction failed (will retry on next step):', e);
+                            }
+                        } else {
+                            console.log(`Segment ${index + 2} has a custom image. Skipping frame extraction.`);
+                            // Still update lastGeneratedImage for backup
+                            try {
+                                state.lastGeneratedImage = await extractLastFrame(videoUrl);
+                            } catch (e) { }
+                        }
+                    }
+
+                    // Human-like Delay (Random 33% to 100% of Max Delay)
+                    if (state.config.maxDelay > 0) {
+                        const minDelay = state.config.maxDelay * 0.33;
+                        const randomFactor = Math.random() * 0.67; // 0 to 0.67
+                        const delaySec = minDelay + (randomFactor * state.config.maxDelay);
+                        const delayMs = Math.floor(delaySec * 1000);
+
+                        console.log(`Human-like Wait: ${Math.round(delayMs / 1000)}s (Max: ${state.config.maxDelay}s)`);
+
+                        // Breakable delay loop using 100ms chunks to allow immediate Pause/Stop
+                        for (let t = 0; t < delayMs; t += 100) {
+                            if (!state.isRunning) break;
+                            await new Promise(r => setTimeout(r, 100));
                         }
                     }
 
@@ -950,6 +1229,84 @@ if (window.GrokLoopInjected) {
                     return;
 
                 } catch (err) {
+                    // Specific handling for Rate Limit
+                    if (err.message === 'Rate Limit Reached') {
+                        console.error('Rate Limit Reached. Creating Alert...');
+                        state.isRunning = false;
+                        seg.status = 'paused (rate limit)';
+                        this.dashboard.update();
+                        alert("Grok Rate Limit Reached!\n\nPlease wait 24 hours or switch accounts to continue.\nThe loop has been paused.");
+                        return; // Stop.
+                    }
+
+                    // Specific handling for Content Moderation
+                    if (err.message === 'Content Moderated') {
+                        // Check if Pause on Moderation is ENABLED
+                        if (state.config.pauseOnModeration) {
+                            console.warn('Content Moderation hit & Pause on Mod Enabled. Pausing...');
+                            state.isRunning = false;
+                            seg.status = 'paused (moderation)';
+                            this.dashboard.update();
+                            alert("Loop Paused: Content Moderated.\n\nOption 'Pause on Moderation' is enabled.");
+                            return;
+                        }
+
+                        modAttempts++;
+                        const limit = state.config.moderationRetryLimit || 2; // Default 2
+
+                        if (modAttempts <= limit) {
+                            console.warn(`Content Moderation hit (${modAttempts}/${limit}). Waiting 5s then clicking Redo...`);
+                            seg.status = `moderated (${modAttempts}/${limit})`;
+                            this.dashboard.update();
+
+                            await new Promise(r => setTimeout(r, 5000));
+
+                            // Try to find and click Redo/Regenerate button
+                            const redoBtn = Array.from(document.querySelectorAll('button')).find(b =>
+                                (b.innerText.includes('Redo') || b.innerText.includes('Regenerate') || b.getAttribute('aria-label')?.includes('Regenerate'))
+                                && !b.disabled
+                            );
+
+                            if (redoBtn) {
+                                console.log('Clicking Redo/Regenerate button...');
+                                redoBtn.click();
+                            } else {
+                                console.warn('Redo button not found. Falling back to full retry loop.');
+                                // If no redo button, we just loop back. `attempt` is NOT decremented, so regular retry logic applies?
+                                // No, user wants infinite-ish retry for moderation but limited by modLimit.
+                                // If we can't find Redo, we should probably just `continue` which re-runs headers.
+                            }
+
+                            // IMPORTANT: We treat this as a specialized retry.
+                            // We do NOT decrement `attempt` because we want to use the loop, 
+                            // BUT we need to skip the upload/prompt logic if we clicked Redo?
+                            // Actually, 'continue' restarts the loop. 
+                            // If we clicked Redo, the 'Wait for Video' logic is what we need. 
+                            // But `processSegment` loop starts with Upload.
+
+                            // Hack: We decrement attempt so we don't use up "Crash Retries"
+                            attempt--;
+
+                            // We set a flag on state to skip setup next loop? 
+                            // Or better: We assume Redo just worked and we jump to "Wait"?
+                            // Because of the loop structure, strict "jump to wait" is hard without `goto`.
+                            // So we rely on `continue`.
+                            // BUT, next loop will try to Type Prompt again. 
+                            // If Redo clicked, maybe prompt box is cleared or locked?
+                            // This generic Redo request assumes "Click Redo -> Wait for Video".
+
+                            continue;
+                        } else {
+                            console.error('Moderation Limit Reached. Pausing loop.');
+                            // Always pause when limit reached to avoid infinite loops or crashes
+                            state.isRunning = false;
+                            seg.status = 'paused (moderation limit)';
+                            this.dashboard.update();
+                            alert("Loop Paused: Content Moderation Limit Reached.\n\nPlease adjust your prompt/image and click Resume.");
+                            return; // Exit logic, state is paused.
+                        }
+                    }
+
                     console.error(`Segment ${index + 1} failed on attempt ${attempt + 1}:`, err);
 
                     if (attempt < maxRetries) {
@@ -958,8 +1315,12 @@ if (window.GrokLoopInjected) {
                     } else {
                         seg.status = 'error';
                         this.dashboard.update();
-                        state.isRunning = false;
-                        throw err;
+                        if (!state.config.continueOnFailure) {
+                            state.isRunning = false;
+                            throw err;
+                        } else {
+                            console.warn('Max retries reached. Skipping segment (Continue on Failure ON).');
+                        }
                     }
                 }
             }
@@ -1003,12 +1364,45 @@ if (window.GrokLoopInjected) {
     // --- Init ---
     window.LoopManager.init();
 
-    // Listener
+    // Listener - Messages
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('[Content] Received message:', message);
+
         if (message.action === 'START_LOOP') {
             window.LoopManager.start(message.payload);
             sendResponse({ status: 'STARTED' });
+        }
+        else if (message.action === 'PAUSE_LOOP') {
+            window.LoopManager.togglePause(false);
+        }
+        else if (message.action === 'RESUME_LOOP') {
+            if (!state.isRunning) window.LoopManager.togglePause(true, message.payload);
+        }
+        else if (message.action === 'REGENERATE_SEGMENT') {
+            window.LoopManager.regenerateSegment(message.payload.index);
+        }
+        else if (message.action === 'DOWNLOAD_SEGMENT') {
+            window.LoopManager.downloadSegment(message.payload.index);
+        }
+        else if (message.action === 'SET_DASHBOARD_VISIBILITY') {
+            window.LoopManager.dashboard.setVisibility(message.payload.visible);
+        }
+    });
+
+    // Listener - Storage (Sync Config Runtime)
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.grokLoopConfig) {
+            const newConfig = changes.grokLoopConfig.newValue;
+            if (newConfig) {
+                console.log('[Content] Config updated from storage:', newConfig);
+                // Update specific keys relevant to runtime
+                if (state.config) {
+                    if (newConfig.pauseOnModeration !== undefined) state.config.pauseOnModeration = newConfig.pauseOnModeration;
+                    if (newConfig.showDebugLogs !== undefined) state.config.showDebugLogs = newConfig.showDebugLogs;
+                    if (newConfig.moderationRetryLimit !== undefined) state.config.moderationRetryLimit = newConfig.moderationRetryLimit;
+                    // Other runtime configs can be synced here if needed
+                }
+            }
         }
     });
 }

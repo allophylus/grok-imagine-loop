@@ -1,4 +1,6 @@
-// Grok Imagine Loop Background Script
+// Open Side Panel on Icon Click
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error) => console.error(error));
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'DOWNLOAD_VIDEO') {

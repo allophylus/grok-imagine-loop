@@ -12,13 +12,14 @@ This tool allows you to create seamless video sequences by automatically using t
 *   **📥 Auto-Download:** Automatically saves each generated segment to your Downloads folder.
 *   **💾 State Persistence:**
     *   **Input Saving:** Your Prompts, Scene counts, and settings are saved automatically.
-    *   **Image Resume:** If you close the popup, your uploaded initial image is restored (`✓ my-image.jpg`).
-    *   **Crash Recovery:** Safely reload your browser; your progress is saved and can be resumed.
-*   **⇱ Power User UI:**
-    *   **Pop Out Mode:** Detach the controller into a separate window to keep it visible while you work.
-    *   **Modern Dark Mode:** Sleek interface that matches the Grok aesthetic.
+    *   **Config Presets:** Save and load multiple "Loops" (Settings + Scenes) for easy reuse.
+*   **⇱ Side Panel Workflow:**
+    *   **Native Integration:** Runs directly in the Chrome Side Panel for a seamless experience.
+    *   **Optional Dashboard:** Toggle the floating on-page overlay if you prefer a clean view.
 *   **🛡️ Anti-Bot Protection:** Human-like typing, clicking, and randomized delays to avoid detection.
-*   **🛠️ Smart Recovery:** Options to regenerate single segments or cascade changes to all future segments.
+*   **🛠️ Full Control:** 
+    *   **Regenerate:** Retry any specific segment directly from the list.
+    *   **Resume with Edits:** Edit future prompts while paused, then resume to apply changes dynamically.
 
 ## Installation (Google Chrome)
 
@@ -57,10 +58,6 @@ This tool allows you to create seamless video sequences by automatically using t
 **Tips:**
 *   Use the **Pause** button on the dashboard if you need to inspect a video.
 *   Use **Reset Inputs** at the bottom of the popup to clear all saved settings and images.
-
-## Known Issues
-
-*   **Subsequence Scene Initial Frame:** Manually setting a custom initial image for a *subsequent* scene (checking the box to use a new image for Scene 2+) is currently not fully supported and may default to the previous frame.
 
 ## Support
 
