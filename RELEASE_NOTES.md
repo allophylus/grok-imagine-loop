@@ -1,5 +1,8 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.5.3
+- **Fix:** **Regenerate with Edits**: Fixed a bug where editing a prompt in the Side Panel and clicking "Regenerate" (in the Active Run list) would use the old/stale prompt. It now correctly applies your latest edits.
+
 ## v1.5.2
 - **Config:** **New Defaults**: "Show Dashboard Overlay" is now **Disabled** by default (runs in background/side panel). "Show Debug Logs" is **Enabled** by default for better troubleshooting.
 - **Config:** **Strict Mode**: New setting to strictly enforce "Enter Key" submission.

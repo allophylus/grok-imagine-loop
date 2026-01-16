@@ -1233,7 +1233,21 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.onclick = async () => {
                 const idx = parseInt(btn.dataset.index);
                 const tab = await findGrokTab();
-                if (tab) chrome.tabs.sendMessage(tab.id, { action: 'REGENERATE_SEGMENT', payload: { index: idx } });
+
+                let promptToSend = null;
+                // Attempt to sync from editor state if available
+                if (scenes && scenes[idx] && scenes[idx].prompt) {
+                    promptToSend = scenes[idx].prompt;
+                    console.log(`Sending updated prompt for scene ${idx + 1}:`, promptToSend);
+                }
+
+                if (tab) chrome.tabs.sendMessage(tab.id, {
+                    action: 'REGENERATE_SEGMENT',
+                    payload: {
+                        index: idx,
+                        prompt: promptToSend
+                    }
+                });
             };
         });
 

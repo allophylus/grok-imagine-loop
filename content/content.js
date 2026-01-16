@@ -1501,15 +1501,24 @@ if (window.GrokLoopInjected) {
             }
         },
 
-        async regenerateSegment(index) {
+        async regenerateSegment(index, newPrompt) {
             if (state.isRunning) { alert("Please Pause first."); return; }
 
             const cascade = confirm("Regenerate all subsequent segments too?\nOK = Cascade (Everything after this changes)\nCancel = Single (Just this one)");
 
             const seg = state.segments[index];
+            if (newPrompt && typeof newPrompt === 'string') {
+                console.log(`Updating prompt for Segment ${index + 1} before regeneration.`);
+                seg.prompt = newPrompt;
+            }
+
             seg.status = 'pending';
             seg.videoUrl = null;
 
+            if (cascade) {
+                // ...
+            }
+            // ... (rest is same, but I need to include it or carefully target)
             if (cascade) {
                 for (let i = index + 1; i < state.segments.length; i++) {
                     state.segments[i].status = 'pending';
@@ -1526,6 +1535,7 @@ if (window.GrokLoopInjected) {
         },
 
         downloadSegment(index) {
+            // ...
             const seg = state.segments[index];
             if (seg.videoUrl) {
                 chrome.runtime.sendMessage({
@@ -1554,7 +1564,7 @@ if (window.GrokLoopInjected) {
             if (!state.isRunning) window.LoopManager.togglePause(true, message.payload);
         }
         else if (message.action === 'REGENERATE_SEGMENT') {
-            window.LoopManager.regenerateSegment(message.payload.index);
+            window.LoopManager.regenerateSegment(message.payload.index, message.payload.prompt);
         }
         else if (message.action === 'DOWNLOAD_SEGMENT') {
             window.LoopManager.downloadSegment(message.payload.index);
