@@ -22,7 +22,10 @@ if (window.GrokLoopInjected) {
         config: {
             timeout: 30000,
             pauseOnError: true, // Default enabled
-            strictMode: false // Default disabled (Legacy Button-First)
+            strictMode: false, // Default disabled (Legacy Button-First)
+            showDashboard: false, // Default disabled per user request
+            showDebugLogs: true, // Default enabled per user request
+            skipOnModeration: false
         }
     };
 

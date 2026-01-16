@@ -1,5 +1,14 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.5.2
+- **Config:** **New Defaults**: "Show Dashboard Overlay" is now **Disabled** by default (runs in background/side panel). "Show Debug Logs" is **Enabled** by default for better troubleshooting.
+- **Config:** **Strict Mode**: New setting to strictly enforce "Enter Key" submission.
+
+## v1.5.1
+- **Feature:** **Skip on Moderation**: New setting to automatically skip segments that trigger moderation flags instead of pausing the workflow.
+- **Improvement:** **Fast Text Entry**: Optimized prompt typing to be near-instant (simulating paste) for faster execution.
+- **Fix:** **Enter Key Logic**: Resolved issue where "Strict Mode" (or previous Enter logic) was causing errors or failing silently.
+
 ## v1.5.0
 - **Feature:** **Side Panel Integration**. Extension now runs natively in the Chrome Side Panel with a fully responsive Dark Mode UI.
 - **Feature:** **Configuration Saving:** Save your favorite prompt loops and settings as named presets.
