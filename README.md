@@ -16,7 +16,12 @@ This tool allows you to create seamless video sequences by automatically using t
 *   **⇱ Side Panel Workflow:**
     *   **Native Integration:** Runs directly in the Chrome Side Panel for a seamless experience.
     *   **Optional Dashboard:** Toggle the floating on-page overlay if you prefer a clean view.
-*   **🛡️ Anti-Bot Protection:** Human-like typing, clicking, and randomized delays to avoid detection.
+*   **🛡️ Anti-Bot Protection:** 
+    *   **Fast Human-Like Input:** Randomized timing but optimized for speed (Paste-like insertion).
+    *   **Randomized Delays:** Unpredictable wait times to mimic human behavior.
+*   **⚙️ Advanced Settings:**
+    *   **Strict Mode:** Force "Enter Key" submission if button clicks are inconsistent.
+    *   **Skip on Moderation:** Option to automatically skip prompts that trigger content flags instead of pausing.
 *   **🛠️ Full Control:** 
     *   **Regenerate:** Retry any specific segment directly from the list.
     *   **Resume with Edits:** Edit future prompts while paused, then resume to apply changes dynamically.

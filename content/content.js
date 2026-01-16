@@ -19,8 +19,27 @@ if (window.GrokLoopInjected) {
         segments: [],
         isRunning: false,
         currentSegmentIndex: -1,
-        config: { timeout: 30000 }
+        config: {
+            timeout: 30000,
+            pauseOnError: true, // Default enabled
+            strictMode: false // Default disabled (Legacy Button-First)
+        }
     };
+
+    // ... (lines 28-316 unchanged) ...
+
+    // COPY OF REST OF FILE TO ENSURE CONTEXT (I must include everything I am not changing if I span a large block, but replace_file_content works on chunks).
+    // I will target specific functions instead of the whole file to be safe.
+
+    // This tool call is modifying STATE (above) and will modify DASHBOARD and SENDPROMPTTOGROK below.
+    // Since I cannot modify multiple non-contiguous blocks, I have to assume the above 'state' change requires a separate call or I must include the intervening code.
+    // The intervening code is lines 28-321 (300 lines). That's too much to copy-paste blindly.
+    // I will switch to `multi_replace_file_content` if possible? No, sticking to `replace_file_content`.
+    // I will do the STATE update first, then the Logic/UI update.
+
+    // Actually, I'll update the State INIT and Dashboard/Logic in one go if I can find a way, but they are far apart.
+    // I'll update STATE first.
+
 
     // Load saved config immediately for logging/persistence
     chrome.storage.local.get(['grokLoopConfig'], (res) => {
@@ -99,6 +118,10 @@ if (window.GrokLoopInjected) {
         return new Blob([ab], { type: mimeString });
     }
 
+    function debugBtn(b) {
+        return `[${b.tagName}] text="${b.textContent.trim().substring(0, 20)}..." aria="${b.ariaLabel || ''}" title="${b.title || ''}" class="${b.className}"`;
+    }
+
     function blobToBase64(blob) {
         return new Promise((r, j) => {
             const rx = new FileReader();
@@ -108,101 +131,141 @@ if (window.GrokLoopInjected) {
         });
     }
 
-    async function typeHumanly(element, text) {
+    // --- Anti-Bot Helper Functions ---
+    // --- Anti-Bot Helper Functions ---
+    // Renamed/Refactored for speed per user request ("Copy and Paste")
+    async function insertTextFast(element, text) {
         element.focus();
-        await new Promise(r => setTimeout(r, 50));
 
-        // 1. Clear existing content
+        // Clear first
         if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
             element.value = '';
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-            element.dispatchEvent(new Event('change', { bubbles: true }));
         } else if (element.isContentEditable) {
             document.execCommand('selectAll', false, null);
             document.execCommand('delete', false, null);
         }
 
-        // 2. React Value Setter Helper
-        const setNativeValue = (el, value) => {
+        await new Promise(r => setTimeout(r, 50));
+
+        // Fast Insertion (Simulate Paste)
+        if (element.tagName === 'DIV' && element.isContentEditable) {
+            // execCommand 'insertText' mimics a user typing or pasting plain text
+            // It triggers input events automatically and works well with React
+            document.execCommand('insertText', false, text);
+        } else {
+            // For Textarea/Input, we need to be careful with React state
             const descriptor = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value") ||
                 Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+
             if (descriptor && descriptor.set) {
-                descriptor.set.call(el, value);
+                descriptor.set.call(element, text);
             } else {
-                el.value = value;
-            }
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-        };
-
-        // 3. Type character by character
-        let currentText = '';
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            const delay = Math.floor(Math.random() * 40) + 10; // Faster typing
-            await new Promise(r => setTimeout(r, delay));
-
-            // Standard events
-            const keyEventOpts = { bubbles: true, cancelable: true, key: char, char: char };
-            element.dispatchEvent(new KeyboardEvent('keydown', keyEventOpts));
-            element.dispatchEvent(new KeyboardEvent('keypress', keyEventOpts));
-
-            if (element.tagName === 'DIV' && element.isContentEditable) {
-                document.execCommand('insertText', false, char);
-            } else {
-                // Try execCommand first for Textarea (more robust for some editors)
-                const success = document.execCommand('insertText', false, char);
-                if (!success) {
-                    currentText += char;
-                    setNativeValue(element, currentText);
-                }
-            }
-            element.dispatchEvent(new KeyboardEvent('keyup', keyEventOpts));
-        }
-
-        // 4. Verification & Fallback
-        await new Promise(r => setTimeout(r, 100));
-        let finalVal = element.value || element.textContent;
-
-        if (finalVal.length < text.length * 0.8) { // If significantly missing
-            console.warn('Typing verification failed. Attempting brute-force injection...');
-            if (element.tagName === 'DIV' && element.isContentEditable) {
-                element.textContent = text;
-            } else {
-                setNativeValue(element, text);
+                element.value = text;
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
-        element.dispatchEvent(new Event('change', { bubbles: true }));
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 100)); // Short settle time
     }
 
     async function simulateClick(element) {
         if (!element) return;
 
-        const eventOptions = { bubbles: true, cancelable: true, view: window };
-        const pointerOptions = { ...eventOptions, pointerId: 1, isPrimary: true, button: 0 };
+        // 1. Move to element (hover)
+        element.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window }));
+        // ... (rest of simulateClick is fine)
+        element.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true, view: window }));
 
-        // 1. PointerOver/Enter & MouseOver/Enter (Hover)
-        element.dispatchEvent(new PointerEvent('pointerover', pointerOptions));
-        element.dispatchEvent(new PointerEvent('pointerenter', pointerOptions));
-        element.dispatchEvent(new MouseEvent('mouseover', eventOptions));
-        element.dispatchEvent(new MouseEvent('mouseenter', eventOptions));
+        // Reduced hover time for speed
+        await new Promise(r => setTimeout(r, Math.random() * 100 + 50));
 
-        // "Hover" time
-        await new Promise(r => setTimeout(r, Math.random() * 300 + 100));
-
-        // 2. PointerDown & MouseDown
-        element.dispatchEvent(new PointerEvent('pointerdown', pointerOptions));
-        element.dispatchEvent(new MouseEvent('mousedown', eventOptions));
-        element.focus(); // Focus on mousedown
+        // 2. Down
+        element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+        element.focus();
 
         // Hold time
-        await new Promise(r => setTimeout(r, Math.random() * 150 + 50));
+        await new Promise(r => setTimeout(r, Math.random() * 50 + 20));
 
         // 3. Up & Click
         element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
         element.click();
+    }
+
+    async function simulateEnterKey(element) {
+        element.focus();
+        await new Promise(r => setTimeout(r, 100));
+
+        // STRATEGY 1: Direct React Handler Invocation
+        try {
+            const reactKey = Object.keys(element).find(key => key.startsWith('__reactProps$'));
+            if (reactKey) {
+                const props = element[reactKey];
+                if (props && typeof props.onKeyDown === 'function') {
+                    console.log('Found React onKeyDown handler. Invoking directly...');
+
+                    const mockEvent = {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        which: 13,
+                        charCode: 13,
+                        bubbles: true,
+                        cancelable: true,
+                        preventDefault: () => { },
+                        stopPropagation: () => { },
+                        nativeEvent: new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }),
+                        currentTarget: element,
+                        target: element
+                    };
+
+                    props.onKeyDown(mockEvent);
+
+                    if (typeof props.onKeyPress === 'function') {
+                        props.onKeyPress(mockEvent);
+                    }
+
+                    await new Promise(r => setTimeout(r, 50));
+                    console.log('React handler invoked.');
+                }
+            }
+        } catch (e) {
+            console.warn('React handler invocation failed:', e);
+        }
+
+        // STRATEGY 2: Enhanced Native Events
+        const eventInit = {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            charCode: 13,
+            view: window
+        };
+
+        const down = new KeyboardEvent('keydown', eventInit);
+        Object.defineProperty(down, 'keyCode', { value: 13 });
+        Object.defineProperty(down, 'which', { value: 13 });
+        element.dispatchEvent(down);
+
+        const press = new KeyboardEvent('keypress', eventInit);
+        Object.defineProperty(press, 'keyCode', { value: 13 });
+        Object.defineProperty(press, 'which', { value: 13 });
+        element.dispatchEvent(press);
+
+        await new Promise(r => setTimeout(r, 50));
+
+        const up = new KeyboardEvent('keyup', eventInit);
+        Object.defineProperty(up, 'keyCode', { value: 13 });
+        Object.defineProperty(up, 'which', { value: 13 });
+        element.dispatchEvent(up);
+
+        if (element.form) {
+            // element.form.requestSubmit(); 
+        }
     }
 
     async function uploadImageToGrok(input) {
@@ -211,7 +274,6 @@ if (window.GrokLoopInjected) {
         // Gentle Back Logic
         if (!fileInput) {
             console.log('File input not found. Checking for Modal/Lightbox close...');
-            // Check if we are in "Post View" (Lightbox)
             const closeButton = document.querySelector('button[aria-label="Close"]') || document.querySelector('button[aria-label="Back"]');
 
             if (closeButton) {
@@ -219,14 +281,11 @@ if (window.GrokLoopInjected) {
                 closeButton.click();
                 await new Promise(r => setTimeout(r, 1500));
 
-                // Check if input appeared after navigation
                 fileInput = document.querySelector('input[type="file"]');
                 if (fileInput) console.log('File input found after navigation.');
             }
 
-            // Only try to find/click the upload button if we STILL don't have the input
             if (!fileInput) {
-                // Re-scan
                 const buttons = Array.from(document.querySelectorAll('button'));
                 const uploadTrigger = buttons.find(b => {
                     const label = (b.ariaLabel || b.title || '').toLowerCase();
@@ -234,8 +293,6 @@ if (window.GrokLoopInjected) {
                 });
 
                 if (uploadTrigger) {
-                    // Try to avoid clicking if it looks like the main "Upload" button which opens dialog
-                    // But if we must...
                     console.log('Clicking upload trigger to reveal input...');
                     uploadTrigger.click();
                     await new Promise(r => setTimeout(r, 500));
@@ -244,7 +301,6 @@ if (window.GrokLoopInjected) {
             }
         }
 
-        // Final fallback
         if (!fileInput) {
             const hiddenInput = document.querySelector('input[type="file"]');
             if (hiddenInput) fileInput = hiddenInput;
@@ -267,7 +323,7 @@ if (window.GrokLoopInjected) {
     }
 
     async function sendPromptToGrok(text) {
-        await new Promise(r => setTimeout(r, 2000)); // Initial pause
+        await new Promise(r => setTimeout(r, 1000)); // Reduced initial pause
 
         let inputArea = null;
         const timeoutMs = state.config.timeout;
@@ -275,9 +331,10 @@ if (window.GrokLoopInjected) {
         const maxRetries = Math.ceil(timeoutMs / retryDelay);
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
+            // ... (selector logic same as before) ...
             console.log(`Searching for input area (${attempt + 1}/${maxRetries})...`);
 
-            // Precise
+            // 1. Precise selectors
             inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]') ||
                 document.querySelector('textarea[placeholder*="customize"]') ||
                 document.querySelector('input[placeholder*="customize"]');
@@ -322,14 +379,39 @@ if (window.GrokLoopInjected) {
 
         if (!inputArea) throw new Error('Could not find text input area.');
 
-        // Use HUMAN TYPING instead of instant set
-        console.log('Typing prompt humanly...');
-        await typeHumanly(inputArea, text);
+        console.log('Inserting text (Fast Method)...');
+        await insertTextFast(inputArea, text);
 
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 500)); // Reduced post-type delay
 
-        // click "Make video" or "Send" button
-        console.log('Searching for Send/Make Video button...');
+        // --- SUBMISSION LOGIC ---
+
+        // OPTION A: STRICT MODE (Enter Key Only)
+        if (state.config.strictMode) {
+            console.log('STRICT MODE: Submitting via Enter Key ONLY...');
+            await simulateEnterKey(inputArea);
+
+            await new Promise(r => setTimeout(r, 1000));
+            // Success check: Input detached or cleared?
+            if (!inputArea.isConnected || (inputArea.value || inputArea.textContent || '').trim() === '') {
+                console.log('Strict Enter submission successful.');
+                return;
+            }
+
+            // Retry once
+            console.warn('Strict Enter failed. Retrying one time...');
+            await simulateEnterKey(inputArea);
+            await new Promise(r => setTimeout(r, 1000));
+
+            if (!inputArea.isConnected || (inputArea.value || inputArea.textContent || '').trim() === '') {
+                return;
+            }
+
+            throw new Error('Strict Mode: Enter Key Submission Failed. (Button fallback disabled)');
+        }
+
+        // OPTION B: LEGACY/DEFAULT (Button First -> Enter Fallback)
+        console.log('Legacy Mode: Searching for Send/Make Video button...');
         let sendBtn = null;
         for (let i = 0; i < 20; i++) {
             const buttons = Array.from(document.querySelectorAll('button'));
@@ -348,7 +430,7 @@ if (window.GrokLoopInjected) {
             await new Promise(r => setTimeout(r, 500));
         }
 
-        console.warn('Could not find enabled Send button after 10s. Trying Enter key...');
+        console.warn('Could not find enabled Send button after 10s. Falling back to Enter key...');
         inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, keyCode: 13, key: 'Enter' }));
     }
 
@@ -706,17 +788,21 @@ if (window.GrokLoopInjected) {
 
             // Header
             const header = createEl('div', 'dashboard-header');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
             header.appendChild(createEl('h3', '', 'Grok Loop'));
 
-            // Drag Logic
+            // Drag Logic (Simplified for readability in replace)
             let isDragging = false;
             let currentX, currentY, initialX, initialY;
             let xOffset = 0, yOffset = 0;
 
             header.onmousedown = (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; // Don't drag on controls
                 initialX = e.clientX - xOffset;
                 initialY = e.clientY - yOffset;
-                if (e.target === header || e.target.parentNode === header) isDragging = true;
+                isDragging = true;
             };
 
             document.addEventListener('mousemove', (e) => {
@@ -727,29 +813,111 @@ if (window.GrokLoopInjected) {
                     xOffset = currentX;
                     yOffset = currentY;
                     this.root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-                    this.root.classList.remove('collapsed');
                 }
             });
 
-            document.addEventListener('mouseup', () => {
-                initialX = currentX;
-                initialY = currentY;
-                isDragging = false;
-            });
+            document.addEventListener('mouseup', () => { isDragging = false; });
 
+            // Controls Container
             const controls = createEl('div', 'dashboard-controls');
+            controls.style.display = 'flex';
+            controls.style.gap = '8px';
+
+            // Settings Button
+            const settingsBtn = createEl('button', 'icon-btn', '⚙');
+            settingsBtn.title = 'Settings';
+            settingsBtn.onclick = () => {
+                const panel = this.root.querySelector('.settings-panel');
+                if (panel) {
+                    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                }
+            };
+            controls.appendChild(settingsBtn);
+
+            // Collapse Button
             const collapseBtn = createEl('button', 'icon-btn', '⇄');
+            collapseBtn.title = 'Collapse/Expand';
             collapseBtn.onclick = () => {
                 this.root.classList.toggle('collapsed');
                 if (this.root.classList.contains('collapsed')) {
                     this.root.style.transform = '';
-                    xOffset = 0;
-                    yOffset = 0;
+                    xOffset = 0; yOffset = 0;
                 }
             };
             controls.appendChild(collapseBtn);
             header.appendChild(controls);
             this.root.appendChild(header);
+
+            // Settings Panel
+            const settingsPanel = createEl('div', 'settings-panel');
+            settingsPanel.style.display = 'none';
+            settingsPanel.style.padding = '10px';
+            settingsPanel.style.background = 'rgba(0,0,0,0.3)';
+            settingsPanel.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+            settingsPanel.style.fontSize = '12px';
+
+            // Option: Strict Mode
+            const strictRow = createEl('div', 'setting-row');
+            strictRow.style.display = 'flex';
+            strictRow.style.alignItems = 'center';
+            strictRow.style.gap = '8px';
+
+            const strictCb = createEl('input', '');
+            strictCb.type = 'checkbox';
+            strictCb.id = 'setting-strict-mode';
+            strictCb.checked = state.config.strictMode || false;
+
+            strictCb.onchange = (e) => {
+                state.config.strictMode = e.target.checked;
+                console.log('Strict Mode toggled:', state.config.strictMode);
+                // Save to storage
+                chrome.storage.local.get(['grokLoopConfig'], (res) => {
+                    const cfg = res.grokLoopConfig || {};
+                    cfg.strictMode = state.config.strictMode;
+                    chrome.storage.local.set({ 'grokLoopConfig': cfg });
+                });
+            };
+
+            const strictLabel = createEl('label', '', 'Strict Enter Mode (No Fallback)');
+            strictLabel.htmlFor = 'setting-strict-mode';
+            strictLabel.title = "If enabled, forces use of Enter key purely. If disabled (default), tries button click first.";
+
+            strictRow.appendChild(strictCb);
+            strictRow.appendChild(strictLabel);
+            settingsPanel.appendChild(strictRow);
+
+            // Option: Skip on Moderation
+            const skipModRow = createEl('div', 'setting-row');
+            skipModRow.style.display = 'flex';
+            skipModRow.style.alignItems = 'center';
+            skipModRow.style.gap = '8px';
+            skipModRow.style.marginTop = '4px';
+
+            const skipModCb = createEl('input', '');
+            skipModCb.type = 'checkbox';
+            skipModCb.id = 'setting-skip-mod';
+            skipModCb.checked = state.config.skipOnModeration || false;
+
+            skipModCb.onchange = (e) => {
+                state.config.skipOnModeration = e.target.checked;
+                console.log('Skip on Moderation toggled:', state.config.skipOnModeration);
+                chrome.storage.local.get(['grokLoopConfig'], (res) => {
+                    const cfg = res.grokLoopConfig || {};
+                    cfg.skipOnModeration = state.config.skipOnModeration;
+                    chrome.storage.local.set({ 'grokLoopConfig': cfg });
+                });
+            };
+
+            const skipModLabel = createEl('label', '', 'Skip on Moderation Failure');
+            skipModLabel.htmlFor = 'setting-skip-mod';
+            skipModLabel.title = "If enabled, heavily moderated segments will be marked as 'error' and skipped instead of pausing the workflow.";
+
+            skipModRow.appendChild(skipModCb);
+            skipModRow.appendChild(skipModLabel);
+            settingsPanel.appendChild(skipModRow);
+
+            this.root.appendChild(settingsPanel);
+
 
             // List
             const list = createEl('div', 'segments-list');
@@ -1229,7 +1397,11 @@ if (window.GrokLoopInjected) {
                     return;
 
                 } catch (err) {
-                    // Specific handling for Rate Limit
+                    console.error('Segment Error:', err);
+
+                    // 1. Specific Handlers (Priority)
+
+                    // Rate Limit
                     if (err.message === 'Rate Limit Reached') {
                         console.error('Rate Limit Reached. Creating Alert...');
                         state.isRunning = false;
@@ -1239,7 +1411,7 @@ if (window.GrokLoopInjected) {
                         return; // Stop.
                     }
 
-                    // Specific handling for Content Moderation
+                    // Content Moderation
                     if (err.message === 'Content Moderated') {
                         // Check if Pause on Moderation is ENABLED
                         if (state.config.pauseOnModeration) {
@@ -1272,40 +1444,40 @@ if (window.GrokLoopInjected) {
                                 redoBtn.click();
                             } else {
                                 console.warn('Redo button not found. Falling back to full retry loop.');
-                                // If no redo button, we just loop back. `attempt` is NOT decremented, so regular retry logic applies?
-                                // No, user wants infinite-ish retry for moderation but limited by modLimit.
-                                // If we can't find Redo, we should probably just `continue` which re-runs headers.
                             }
 
-                            // IMPORTANT: We treat this as a specialized retry.
-                            // We do NOT decrement `attempt` because we want to use the loop, 
-                            // BUT we need to skip the upload/prompt logic if we clicked Redo?
-                            // Actually, 'continue' restarts the loop. 
-                            // If we clicked Redo, the 'Wait for Video' logic is what we need. 
-                            // But `processSegment` loop starts with Upload.
-
-                            // Hack: We decrement attempt so we don't use up "Crash Retries"
+                            // Decrement attempt to not count against crash retries
                             attempt--;
-
-                            // We set a flag on state to skip setup next loop? 
-                            // Or better: We assume Redo just worked and we jump to "Wait"?
-                            // Because of the loop structure, strict "jump to wait" is hard without `goto`.
-                            // So we rely on `continue`.
-                            // BUT, next loop will try to Type Prompt again. 
-                            // If Redo clicked, maybe prompt box is cleared or locked?
-                            // This generic Redo request assumes "Click Redo -> Wait for Video".
-
                             continue;
                         } else {
-                            console.error('Moderation Limit Reached. Pausing loop.');
-                            // Always pause when limit reached to avoid infinite loops or crashes
-                            state.isRunning = false;
-                            seg.status = 'paused (moderation limit)';
-                            this.dashboard.update();
-                            alert("Loop Paused: Content Moderation Limit Reached.\n\nPlease adjust your prompt/image and click Resume.");
-                            return; // Exit logic, state is paused.
+                            console.error('Moderation Limit Reached.');
+
+                            if (state.config.skipOnModeration) {
+                                console.warn('Skip on Moderation enabled. Marking segment as error and continuing...');
+                                seg.status = 'error (moderated)';
+                                this.dashboard.update();
+                                return; // Continue to next segment
+                            } else {
+                                state.isRunning = false;
+                                seg.status = 'paused (moderation limit)';
+                                this.dashboard.update();
+                                alert("Loop Paused: Content Moderation Limit Reached.\n\nPlease adjust your prompt/image and click Resume.");
+                                return;
+                            }
                         }
                     }
+
+                    // 2. Generic Global Pause on Error (User Requested)
+                    // Only triggers if NOT handled above
+                    if (state.config.pauseOnError) {
+                        console.error('Pause on Error enabled. Stopping loop.');
+                        state.isRunning = false;
+                        seg.status = 'error';
+                        this.dashboard.update();
+                        alert(`Workflow Paused due to Error:\n${err.message}`);
+                        return;
+                    }
+
 
                     console.error(`Segment ${index + 1} failed on attempt ${attempt + 1}:`, err);
 
