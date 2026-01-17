@@ -19,18 +19,18 @@ if (window.GrokLoopInjected) {
         // "Type to customize video", "Digite para personalizar o vídeo...", "Generar video..."
         // Key concept: "Type" OR "customize" OR "personalizar" OR "video" appearing in placeholders
         // We use a broader regex to catch most languages.
-        inputPlaceholder: /customize|personaliz|generar|type to|digite|video|prompt|anpassen|beschreiben/i,
+        inputPlaceholder: /customize|personaliz|generar|type to|digite|video|prompt|anpassen|beschreiben|créer|crea|作成|生成|描述|输入/i,
 
         // "Make video", "Fazer vídeo", "Generar video", "Send", "Post"
         // Also checks for "Regenerate" / "Redo"
-        submitButton: /make|fazer|genera|send|post|create|criar|erstellen|senden/i,
+        submitButton: /make|fazer|genera|send|post|create|criar|erstellen|senden|envoyer|invia|作成|送信|生成|发送/i,
 
         // "Redo", "Regenerate", "Retry"
-        redoButton: /redo|regenerate|retry|tente|novamente|wiederholen|erneut/i,
-        uploadTrigger: /upload|image|photo|add|adicionar|carregar|foto|escolher|hochladen|bild/i,
-        upscale: /upscale|aumentar|enhance|melhorar|verbessern|skalieren/i,
-        more: /more|mais|option|opç|mehr/i,
-        edit: /edit|editar|bearbeiten/i
+        redoButton: /redo|regenerate|retry|tente|novamente|wiederholen|erneut|répéter|riprova|やり直す|再生成|重试/i,
+        uploadTrigger: /upload|image|photo|add|adicionar|carregar|foto|escolher|hochladen|bild|ajouter|aggiungi|画像|上传|添加/i,
+        upscale: /upscale|aumentar|enhance|melhorar|verbessern|skalieren|améliorer|migliora|高画質|放大/i,
+        more: /more|mais|option|opç|mehr|plus|altro|その他|更多/i,
+        edit: /edit|editar|bearbeiten|modifier|modifica|編集|编辑/i
     };
 
     // --- State ---
