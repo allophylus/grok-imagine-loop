@@ -14,6 +14,25 @@ if (window.GrokLoopInjected) {
         grokUpload: 'button[aria-label="Upload file"]'
     };
 
+    // --- LOCALE PATTERNS ---
+    const LOCALE_PATTERNS = {
+        // "Type to customize video", "Digite para personalizar o vídeo...", "Generar video..."
+        // Key concept: "Type" OR "customize" OR "personalizar" OR "video" appearing in placeholders
+        // We use a broader regex to catch most languages.
+        inputPlaceholder: /customize|personaliz|generar|type to|digite|video|prompt/i,
+
+        // "Make video", "Fazer vídeo", "Generar video", "Send", "Post"
+        // Also checks for "Regenerate" / "Redo"
+        submitButton: /make|fazer|genera|send|post|create|criar/i,
+
+        // "Redo", "Regenerate", "Retry"
+        redoButton: /redo|regenerate|retry|tente|novamente/i,
+        uploadTrigger: /upload|image|photo|add|adicionar|carregar|foto|escolher/i,
+        upscale: /upscale|aumentar|enhance|melhorar/i,
+        more: /more|mais|option|opç/i,
+        edit: /edit|editar/i
+    };
+
     // --- State ---
     let state = {
         segments: [],
@@ -292,7 +311,7 @@ if (window.GrokLoopInjected) {
                 const buttons = Array.from(document.querySelectorAll('button'));
                 const uploadTrigger = buttons.find(b => {
                     const label = (b.ariaLabel || b.title || '').toLowerCase();
-                    return label.includes('upload') || label.includes('image') || label.includes('photo') || label.includes('add');
+                    return LOCALE_PATTERNS.uploadTrigger.test(label);
                 });
 
                 if (uploadTrigger) {
@@ -338,9 +357,12 @@ if (window.GrokLoopInjected) {
             console.log(`Searching for input area (${attempt + 1}/${maxRetries})...`);
 
             // 1. Precise selectors
-            inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]') ||
-                document.querySelector('textarea[placeholder*="customize"]') ||
-                document.querySelector('input[placeholder*="customize"]');
+            // 1. Precise selectors (Locale Aware)
+            inputArea = Array.from(document.querySelectorAll('textarea, input[type="text"], div[contenteditable="true"][role="textbox"]'))
+                .find(el => {
+                    const ph = el.getAttribute('placeholder');
+                    return ph && LOCALE_PATTERNS.inputPlaceholder.test(ph);
+                });
 
             if (inputArea) break;
 
@@ -354,7 +376,7 @@ if (window.GrokLoopInjected) {
             // 2a. Strict Check
             inputArea = visibleCandidates.find(el => {
                 const placeholder = (el.placeholder || el.getAttribute('aria-placeholder') || el.innerText || '').toLowerCase();
-                return placeholder.includes('video') || placeholder.includes('customize') || placeholder.includes('prompt');
+                return LOCALE_PATTERNS.inputPlaceholder.test(placeholder);
             });
 
             // 2b. Fallback
@@ -419,8 +441,8 @@ if (window.GrokLoopInjected) {
         for (let i = 0; i < 20; i++) {
             const buttons = Array.from(document.querySelectorAll('button'));
             sendBtn = buttons.find(b => {
-                const label = (b.textContent || b.ariaLabel || b.title || '').trim().toLowerCase();
-                return label === 'make video' || label === 'send' || label === 'generate';
+                const label = (b.textContent || b.ariaLabel || b.title || '').trim();
+                return LOCALE_PATTERNS.submitButton.test(label);
             });
 
             if (sendBtn) {
@@ -521,8 +543,8 @@ if (window.GrokLoopInjected) {
         const findBtn = (text) => {
             const elements = Array.from(document.querySelectorAll('button, div[role="button"], div[role="menuitem"]'));
             return elements.find(el => {
-                const content = (el.innerText || el.ariaLabel || el.textContent || '').toLowerCase();
-                return content.includes(text.toLowerCase()) && !el.disabled;
+                const content = (el.innerText || el.ariaLabel || el.textContent || '').trim();
+                return LOCALE_PATTERNS.upscale.test(content) && !el.disabled;
             });
         };
 
@@ -535,8 +557,8 @@ if (window.GrokLoopInjected) {
             // 2. Find "More" button (...)
             // Strategy A: Aria Label (More, Options, etc.)
             let moreBtn = Array.from(document.querySelectorAll('button')).find(b => {
-                const label = (b.ariaLabel || b.title || '').toLowerCase();
-                return (label.includes('more') || label.includes('option')) && !b.disabled;
+                const label = (b.ariaLabel || b.title || '').trim();
+                return LOCALE_PATTERNS.more.test(label) && !b.disabled;
             });
 
             // Strategy C: Inner Text "..." (Loosened)
@@ -552,7 +574,7 @@ if (window.GrokLoopInjected) {
             if (!moreBtn) {
                 console.log('Strategy A/C failed. Trying Strategy B (Proximity)...');
                 const editBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                    (b.innerText || '').toLowerCase().includes('edit') // broader match
+                    LOCALE_PATTERNS.edit.test(b.innerText || '')
                 );
 
                 if (editBtn) {
@@ -573,8 +595,8 @@ if (window.GrokLoopInjected) {
             if (!moreBtn) {
                 console.log('Strategy A/B/C failed. Trying Strategy D (Redo/Retry Proximity)...');
                 const actionBtn = Array.from(document.querySelectorAll('button')).find(b => {
-                    const text = (b.innerText || '').toLowerCase();
-                    return text.includes('redo') || text.includes('retry') || text.includes('vary');
+                    const text = (b.innerText || '').trim();
+                    return LOCALE_PATTERNS.redoButton.test(text);
                 });
 
                 if (actionBtn) {
@@ -1191,13 +1213,14 @@ if (window.GrokLoopInjected) {
                 const inputs = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
                 const foundPlaceholder = inputs.some(el => {
                     const ph = el.getAttribute('placeholder');
-                    return ph && (ph.includes('Type to customize video') || ph.includes('Customize video'));
+                    return ph && LOCALE_PATTERNS.inputPlaceholder.test(ph);
                 });
 
                 // 2. Button State Check (Backup)
-                const makeBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                    b.innerText.includes('Make video') && !b.disabled && !b.classList.contains('disabled')
-                );
+                const makeBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                    const txt = b.innerText || b.getAttribute('aria-label') || '';
+                    return LOCALE_PATTERNS.submitButton.test(txt) && !b.disabled && !b.classList.contains('disabled');
+                });
 
                 if (foundPlaceholder || makeBtn) {
                     console.log('Upload success confirmed.');
@@ -1223,8 +1246,6 @@ if (window.GrokLoopInjected) {
                 }
 
                 if (state.segments[i].status === 'done') continue;
-
-
 
                 if (!state.isRunning) {
                     console.log('Loop paused during delay.');
@@ -1437,10 +1458,10 @@ if (window.GrokLoopInjected) {
                             await new Promise(r => setTimeout(r, 5000));
 
                             // Try to find and click Redo/Regenerate button
-                            const redoBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                                (b.innerText.includes('Redo') || b.innerText.includes('Regenerate') || b.getAttribute('aria-label')?.includes('Regenerate'))
-                                && !b.disabled
-                            );
+                            const redoBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                                const txt = b.innerText || b.getAttribute('aria-label') || '';
+                                return LOCALE_PATTERNS.redoButton.test(txt) && !b.disabled;
+                            });
 
                             if (redoBtn) {
                                 console.log('Clicking Redo/Regenerate button...');
