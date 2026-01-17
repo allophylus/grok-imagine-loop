@@ -1,7 +1,7 @@
 # Release Notes - Grok Imagine Loop
 
 ## v1.5.4
-- **Fix:** **Multi-Language Support**: Fixed issues where the extension failed on non-English interfaces (e.g., Portuguese). Now supports broader keywords for "Make video", "Type to customize", "Redo", etc.
+- **Fix:** **Multi-Language Support**: Fixed issues where the extension failed on non-English interfaces (e.g., Portuguese, German). Now supports broader keywords for "Make video", "Type to customize", "Redo", etc.
 - **Fix:** **Robust Button Detection**: Improved detection for Upload, Upscale, and Edit buttons using regex patterns.
 
 ## v1.5.3

@@ -19,18 +19,18 @@ if (window.GrokLoopInjected) {
         // "Type to customize video", "Digite para personalizar o vídeo...", "Generar video..."
         // Key concept: "Type" OR "customize" OR "personalizar" OR "video" appearing in placeholders
         // We use a broader regex to catch most languages.
-        inputPlaceholder: /customize|personaliz|generar|type to|digite|video|prompt/i,
+        inputPlaceholder: /customize|personaliz|generar|type to|digite|video|prompt|anpassen|beschreiben/i,
 
         // "Make video", "Fazer vídeo", "Generar video", "Send", "Post"
         // Also checks for "Regenerate" / "Redo"
-        submitButton: /make|fazer|genera|send|post|create|criar/i,
+        submitButton: /make|fazer|genera|send|post|create|criar|erstellen|senden/i,
 
         // "Redo", "Regenerate", "Retry"
-        redoButton: /redo|regenerate|retry|tente|novamente/i,
-        uploadTrigger: /upload|image|photo|add|adicionar|carregar|foto|escolher/i,
-        upscale: /upscale|aumentar|enhance|melhorar/i,
-        more: /more|mais|option|opç/i,
-        edit: /edit|editar/i
+        redoButton: /redo|regenerate|retry|tente|novamente|wiederholen|erneut/i,
+        uploadTrigger: /upload|image|photo|add|adicionar|carregar|foto|escolher|hochladen|bild/i,
+        upscale: /upscale|aumentar|enhance|melhorar|verbessern|skalieren/i,
+        more: /more|mais|option|opç|mehr/i,
+        edit: /edit|editar|bearbeiten/i
     };
 
     // --- State ---
