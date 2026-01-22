@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showDashboardInput = document.getElementById('showDashboard');
     const birthYearInput = document.getElementById('birthYear');
     const globalPromptInput = document.getElementById('globalPrompt');
-    const continueOnFailureInput = document.getElementById('continueOnFailure');
+    const pauseOnErrorInput = document.getElementById('pauseOnError');
     const pauseOnModerationInput = document.getElementById('pauseOnModeration');
     const pauseAfterSceneInput = document.getElementById('pauseAfterScene');
     const upscaleInput = document.getElementById('upscale');
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     autoDownload: autoDownloadInput.checked,
                     autoSkip: autoSkipInput.checked,
                     reuseInitialImage: reuseInitialImageInput.checked,
-                    continueOnFailure: continueOnFailureInput.checked,
+                    continueOnFailure: !pauseOnErrorInput.checked,
                     pauseOnModeration: pauseOnModerationInput.checked,
                     pauseAfterScene: pauseAfterSceneInput.checked,
                     birthYear: birthYearInput.value,
@@ -607,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 autoDownloadInput.checked = !!data.settings.autoDownload;
                 autoSkipInput.checked = !!data.settings.autoSkip;
                 reuseInitialImageInput.checked = !!data.settings.reuseInitialImage;
-                continueOnFailureInput.checked = !!data.settings.continueOnFailure;
+                pauseOnErrorInput.checked = !data.settings.continueOnFailure;
                 pauseOnModerationInput.checked = !!data.settings.pauseOnModeration;
                 if (data.settings.pauseAfterScene !== undefined) pauseAfterSceneInput.checked = data.settings.pauseAfterScene;
                 if (data.settings.showDashboard !== undefined) {
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Attach Config Listeners
-    const pauseOnErrorInput = document.getElementById('pauseOnError');
+    // const pauseOnErrorInput = document.getElementById('pauseOnError'); // Moved to top
     [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
         if (el) {
             el.addEventListener('input', saveConfigs);
@@ -1055,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 autoDownload: autoDownloadInput.checked,
                 autoSkip: autoSkipInput.checked,
                 reuseInitialImage: reuseInitialImageInput.checked,
-                continueOnFailure: continueOnFailureInput.checked,
+                continueOnFailure: !pauseOnErrorInput.checked,
                 pauseOnModeration: pauseOnModerationInput.checked,
                 pauseAfterScene: pauseAfterSceneInput.checked,
                 showDashboard: showDashboardInput.checked,
