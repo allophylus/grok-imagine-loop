@@ -1,5 +1,8 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.0.7 (Beta 7)
+- **Fix:** Fixed an issue where adding new scenes to a finished loop and clicking "Resume" would incorrectly restart the loop from the beginning. It now correctly resumes processing the new scenes.
+
 ## v1.6.0.6 (Beta 6)
 - **Fix:** Enhanced "Scene 1 Regeneration" fix with aggressive input cleanup. The extension now actively removes any residual image attachments in Grok's input box before starting a new generation, ensuring a completely clean state.
 

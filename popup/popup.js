@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
         if (versionNumber) { // Check existence (new ID)
-            versionNumber.textContent = "v1.6 Beta 6"; // Manual Override for Beta
+            versionNumber.textContent = "v1.6 Beta 7"; // Manual Override for Beta
         }
 
         let displayVer = `v${manifestVersion}`;
@@ -965,9 +965,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Case 2: Paused -> RESUME (With Updates)
-            if (lastKnownState && !lastKnownState.isRunning && lastKnownState.currentSegmentIndex >= 0) {
+            // OR Case 2b: Finished -> RESUME (New Scenes Added)
+            const isPaused = lastKnownState && !lastKnownState.isRunning;
+            const hasMoreScenes = lastKnownState && scenes.length > lastKnownState.segments.length;
+            const isFinished = lastKnownState && lastKnownState.currentSegmentIndex === -1;
+
+            // Trigger Resume if:
+            // 1. Paused mid-loop (index >= 0)
+            // 2. Finished (-1) BUT we added new scenes (length > prev length)
+            if (isPaused && (lastKnownState.currentSegmentIndex >= 0 || (isFinished && hasMoreScenes))) {
                 console.log('Sending RESUME command with updates...');
-                statusDiv.innerText = 'Resuming...';
+
+                if (isFinished && hasMoreScenes) {
+                    statusDiv.innerText = 'Resuming (New Scenes)...';
+                } else {
+                    statusDiv.innerText = 'Resuming...';
+                }
 
                 // Re-gather scenes to capture edits
                 const validScenes = scenes.filter(s => s && (s.prompt.trim() !== '' || s.image));

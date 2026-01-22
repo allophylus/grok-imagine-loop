@@ -1195,31 +1195,46 @@ if (window.GrokLoopInjected) {
                 // Merge Payload Updates (if provided)
                 if (resumePayload && resumePayload.scenes) {
                     console.log('Merging updated scenes from Resume payload...');
+
+                    // 1. Update Existing Segments
                     resumePayload.scenes.forEach((updatedScene, i) => {
-                        // Only update future or current segments. Don't touch history.
-                        // Actually, user might edit the current one to retry.
-                        if (i >= state.currentSegmentIndex && i < state.segments.length) {
-                            state.segments[i].prompt = updatedScene.prompt;
-                            // Update image only if strictly provided? 
-                            // Or just overwrite.
-                            // Careful: if inputImage is null/undefined in payload, it might wipe existing extraction.
-                            // But popup sends what it has.
-                            if (updatedScene.inputImage !== undefined) {
-                                // Updated image from Resume Payload is likely a base64 DataURL string.
-                                // We must convert it to a Blob, because processSegment expects a Blob.
-                                if (typeof updatedScene.inputImage === 'string' && updatedScene.inputImage.startsWith('data:')) {
-                                    console.log('Converting updated scene image from DataURL to Blob...');
-                                    state.segments[i].inputImage = dataURItoBlob(updatedScene.inputImage);
-                                } else {
-                                    state.segments[i].inputImage = updatedScene.inputImage;
+                        // If this is an existing segment
+                        if (i < state.segments.length) {
+                            // Only update future or current segments. Don't touch history.
+                            if (i >= state.currentSegmentIndex && state.currentSegmentIndex !== -1) {
+                                state.segments[i].prompt = updatedScene.prompt;
+                                if (updatedScene.inputImage !== undefined) {
+                                    if (typeof updatedScene.inputImage === 'string' && updatedScene.inputImage.startsWith('data:')) {
+                                        state.segments[i].inputImage = dataURItoBlob(updatedScene.inputImage);
+                                    } else {
+                                        state.segments[i].inputImage = updatedScene.inputImage;
+                                    }
                                 }
                             }
+                        } else {
+                            // 2. Append New Segments
+                            console.log(`Appending new scene ${i + 1} from Resume payload...`);
+                            const newSeg = {
+                                id: i,
+                                prompt: updatedScene.prompt,
+                                inputImage: updatedScene.inputImage ? (typeof updatedScene.inputImage === 'string' && updatedScene.inputImage.startsWith('data:') ? dataURItoBlob(updatedScene.inputImage) : updatedScene.inputImage) : null,
+                                videoUrl: null,
+                                status: 'pending'
+                            };
+                            state.segments.push(newSeg);
                         }
                     });
 
-                    // Also update future segments list if length changed?
-                    // For now assuming length is constant for simplicity of "update".
-                    // If length matches, we just updated props.
+                    // 3. Handle Resume Logic (If we were finished but now have more work)
+                    if (state.currentSegmentIndex === -1 && state.segments.length > 0) {
+                        // Find the first pending segment
+                        const firstPending = state.segments.findIndex(s => s.status === 'pending');
+                        if (firstPending !== -1) {
+                            console.log(`Resume requested on finished loop. Found new pending segment at ${firstPending}. Restarting queue...`);
+                            state.currentSegmentIndex = firstPending;
+                            // Ensure strict mode isn't blocked? existing isRunning=true handles it.
+                        }
+                    }
                 }
 
                 this.dashboard.update();
