@@ -1465,12 +1465,28 @@ if (window.GrokLoopInjected) {
                         // IMPORTANT: Do NOT overwrite if user provided a custom image!
                         if (!nextSeg.inputImage) {
                             console.log(`Proactively extracting frame for Segment ${index + 2}...`);
-                            try {
-                                const nextFrame = await extractLastFrame(videoUrl);
-                                nextSeg.inputImage = nextFrame;
-                                state.lastGeneratedImage = nextFrame; // Update global backup
-                            } catch (e) {
-                                console.warn('Proactive extraction failed (will retry on next step):', e);
+
+                            // Retry Logic for Extraction
+                            let extraAttempts = 3;
+                            let extractSuccess = false;
+
+                            while (extraAttempts > 0 && !extractSuccess) {
+                                try {
+                                    const nextFrame = await extractLastFrame(videoUrl);
+                                    nextSeg.inputImage = nextFrame;
+                                    state.lastGeneratedImage = nextFrame; // Update global backup
+                                    extractSuccess = true;
+                                    console.log('Proactive extraction successful.');
+                                } catch (e) {
+                                    console.warn(`Proactive extraction failed (Attempts left: ${extraAttempts - 1}):`, e.message || e);
+                                    extraAttempts--;
+                                    if (extraAttempts > 0) {
+                                        console.log('Retrying extraction in 3s...');
+                                        await new Promise(r => setTimeout(r, 3000));
+                                    } else {
+                                        console.error('Proactive extraction failed after all retries.');
+                                    }
+                                }
                             }
                         } else {
                             console.log(`Segment ${index + 2} has a custom image. Skipping frame extraction.`);
@@ -1572,16 +1588,7 @@ if (window.GrokLoopInjected) {
                         }
                     }
 
-                    // 2. Generic Global Pause on Error (User Requested)
-                    // Only triggers if NOT handled above
-                    if (state.config.pauseOnError) {
-                        console.error('Pause on Error enabled. Stopping loop.');
-                        state.isRunning = false;
-                        seg.status = 'error';
-                        this.dashboard.update();
-                        alert(`Workflow Paused due to Error:\n${err.message}`);
-                        return;
-                    }
+
 
 
                     console.error(`Segment ${index + 1} failed on attempt ${attempt + 1}:`, err);

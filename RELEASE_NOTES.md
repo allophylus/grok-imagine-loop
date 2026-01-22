@@ -1,5 +1,14 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.0.10 (Beta 10)
+- **Fix:** Added automatic retries (3 attempts) for "Proactive Frame Extraction" failures. This prevents the "extraction failed" error from stopping your workflow or causing missing frames in the next segment.
+- **Fix:** Improved error logging to catch and display detailed error messages.
+
+## v1.6.0.9 (Beta 9)
+- **UI:** Renamed "Skip Failed Segments" setting to **"Pause on Error"** to make the behavior clearer.
+    - Checked = Workflow pauses if an error occurs (Default).
+    - Unchecked = Workflow skips failed segments and continues.
+
 ## v1.6.0.8 (Beta 8)
 - **Fix:** "Pause After Scene" setting now updates instantly while the loop is running. Previously, you had to restart the loop for this change to take effect.
 - **Refactor:** Removed legacy code.

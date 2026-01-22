@@ -223,9 +223,9 @@
         <label for="reuseInitialImage" style="margin: 0; cursor: pointer;">Reuse Initial Image (Global)</label>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;"
-        title="If a segment fails after retries, skip it and continue to the next one instead of stopping the loop.">
-        <input type="checkbox" id="continueOnFailure" style="width: auto; margin: 0;">
-        <label for="continueOnFailure" style="margin: 0; cursor: pointer;">Skip Failed Segments</label>
+        title="If checked: The loop will PAUSE if a segment fails (after retries). If unchecked: It will skip the failed segment and continue.">
+        <input type="checkbox" id="pauseOnError" checked style="width: auto; margin: 0;">
+        <label for="pauseOnError" style="margin: 0; cursor: pointer;">Pause on Error</label>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;"
         title="If checked: Pause immediately on 'Content Moderated'. If unchecked: Retry up to Mod Retries limit.">

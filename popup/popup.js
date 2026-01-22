@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
         if (versionNumber) { // Check existence (new ID)
-            versionNumber.textContent = "v1.6 Beta 8"; // Manual Override for Beta
+            versionNumber.textContent = "v1.6 Beta 10"; // Manual Override for Beta
         }
 
         let displayVer = `v${manifestVersion}`;
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             autoDownload: autoDownloadInput.checked,
             autoSkip: autoSkipInput.checked,
             reuseInitialImage: reuseInitialImageInput.checked,
-            continueOnFailure: continueOnFailureInput.checked,
+            continueOnFailure: !document.getElementById('pauseOnError').checked, // Inverted Logic
             pauseOnModeration: pauseOnModerationInput.checked,
             pauseAfterScene: pauseAfterSceneInput.checked,
             showDashboard: showDashboardInput.checked,
@@ -705,7 +705,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Attach Config Listeners
-    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, continueOnFailureInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
+    const pauseOnErrorInput = document.getElementById('pauseOnError');
+    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
         if (el) {
             el.addEventListener('input', saveConfigs);
             el.addEventListener('change', saveConfigs);
@@ -756,7 +757,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (c.autoDownload !== undefined) autoDownloadInput.checked = c.autoDownload;
             if (c.autoSkip !== undefined) autoSkipInput.checked = c.autoSkip;
             if (c.reuseInitialImage !== undefined) reuseInitialImageInput.checked = c.reuseInitialImage;
-            if (c.continueOnFailure !== undefined) continueOnFailureInput.checked = c.continueOnFailure;
+
+            // Logic Inversion: continueOnFailure (true) = pauseOnError (false)
+            if (c.continueOnFailure !== undefined) {
+                // If continueOnFailure is true, Pause on Error should be false
+                // If continueOnFailure is false (default), Pause on Error should be true
+                // Check if element exists (renamed)
+                const pauseOnErrorInput = document.getElementById('pauseOnError');
+                if (pauseOnErrorInput) pauseOnErrorInput.checked = !c.continueOnFailure;
+            } else {
+                // Default: continueOnFailure is undefined (falsy) -> Pause on Error = True
+                const pauseOnErrorInput = document.getElementById('pauseOnError');
+                if (pauseOnErrorInput) pauseOnErrorInput.checked = true;
+            }
+
             if (c.pauseOnModeration !== undefined) pauseOnModerationInput.checked = c.pauseOnModeration;
             if (c.pauseAfterScene !== undefined) pauseAfterSceneInput.checked = c.pauseAfterScene;
             if (c.showDashboard !== undefined) showDashboardInput.checked = c.showDashboard;
