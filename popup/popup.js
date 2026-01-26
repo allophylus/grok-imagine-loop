@@ -253,7 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const versionNumber = document.getElementById('versionNumber'); // Assuming this is the new ID for the main version display
 
     try {
-        const displayVer = `v${manifestVersion}`;
+        // Auto-detect beta: 4-part version (e.g., 1.6.0.14) = Beta, 3-part (e.g., 1.6.1) = Stable
+        const isBeta = manifestVersion.split('.').length > 3;
+        const displayVer = `v${manifestVersion}${isBeta ? ' (Beta)' : ''}`;
 
         if (versionNumber) {
             versionNumber.textContent = displayVer;
@@ -261,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (versionSpan) versionSpan.innerText = displayVer;
         const aboutVer = document.getElementById('aboutVersion');
-        if (aboutVer) aboutVer.innerText = `Version ${manifestVersion}`;
+        if (aboutVer) aboutVer.innerText = `Version ${manifestVersion}${isBeta ? ' (Beta)' : ''}`;
     } catch (e) { console.error(e); }
 
     const bulkPromptsInput = document.getElementById('bulkPrompts');
