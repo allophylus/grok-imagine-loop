@@ -513,9 +513,30 @@ if (window.GrokLoopInjected) {
                 const possibleBtns = container.querySelectorAll('button');
                 possibleBtns.forEach(b => {
                     const label = (b.ariaLabel || b.title || '').toLowerCase();
-                    if (TRANSLATIONS.remove.some(k => label.includes(k))) {
+                    
+                    // Strict filters to avoid clicking X buttons for modals/sidebars
+                    // Skip if button is not truly part of the attachment thumbnail
+                    if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) {
+                        return; // Skip navigation elements
+                    }
+                    
+                    // Check if label matches a remove keyword
+                    const isRemoveBtn = TRANSLATIONS.remove.some(k => label.includes(k));
+                    
+                    // Additional safety: "close" alone is too generic
+                    // Must match more specific keywords like "remove", "delete", "eliminate", etc.
+                    // OR be near the actual thumbnail element
+                    const closeOnlyLabel = label.trim() === 'close';
+                    const isCloseBtn = label.includes('close');
+                    
+                    if (isRemoveBtn && !closeOnlyLabel) {
+                        // If it says "close" but also has other keywords, it's likely an attachment close button
+                        removeBtns.push(b);
+                    } else if (!isCloseBtn && isRemoveBtn) {
+                        // If it matches remove/delete without the ambiguous "close", it's safe
                         removeBtns.push(b);
                     }
+                    // Skip if label is just "close" - too risky
                 });
             }
         });
@@ -529,6 +550,9 @@ if (window.GrokLoopInjected) {
                 // Double check it's not the main upload button
                 const label = (btn.ariaLabel || btn.title || '').toLowerCase();
                 if (TRANSLATIONS.upload.some(k => label.includes(k))) continue;
+                
+                // Final safety check: verify button is still in DOM and visible
+                if (!document.contains(btn) || btn.offsetParent === null) continue;
 
                 btn.click();
                 await new Promise(r => setTimeout(r, 200));

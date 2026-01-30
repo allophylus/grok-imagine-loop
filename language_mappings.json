@@ -1,0 +1,170 @@
+{
+  "languages": [
+    {
+      "code": "ar",
+      "native": "العربية",
+      "english": "Arabic"
+    },
+    {
+      "code": "bn",
+      "native": "বাংলা",
+      "english": "Bengali"
+    },
+    {
+      "code": "cs",
+      "native": "Čeština",
+      "english": "Czech"
+    },
+    {
+      "code": "de",
+      "native": "Deutsch",
+      "english": "German"
+    },
+    {
+      "code": "en",
+      "native": "English",
+      "english": "English"
+    },
+    {
+      "code": "es",
+      "native": "Español",
+      "english": "Spanish"
+    },
+    {
+      "code": "fa",
+      "native": "فارسی",
+      "english": "Persian"
+    },
+    {
+      "code": "fil",
+      "native": "Filipino",
+      "english": "Filipino"
+    },
+    {
+      "code": "fr",
+      "native": "Français",
+      "english": "French"
+    },
+    {
+      "code": "hi",
+      "native": "हिन्दी",
+      "english": "Hindi"
+    },
+    {
+      "code": "hu",
+      "native": "Magyar",
+      "english": "Hungarian"
+    },
+    {
+      "code": "id",
+      "native": "Bahasa Indonesia",
+      "english": "Indonesian"
+    },
+    {
+      "code": "it",
+      "native": "Italiano",
+      "english": "Italian"
+    },
+    {
+      "code": "ja",
+      "native": "日本語",
+      "english": "Japanese"
+    },
+    {
+      "code": "ko",
+      "native": "한국어",
+      "english": "Korean"
+    },
+    {
+      "code": "mr",
+      "native": "मराठी",
+      "english": "Marathi"
+    },
+    {
+      "code": "nl",
+      "native": "Nederlands",
+      "english": "Dutch"
+    },
+    {
+      "code": "pl",
+      "native": "Polski",
+      "english": "Polish"
+    },
+    {
+      "code": "pt",
+      "native": "Português",
+      "english": "Portuguese"
+    },
+    {
+      "code": "ro",
+      "native": "Română",
+      "english": "Romanian"
+    },
+    {
+      "code": "ru",
+      "native": "Русский",
+      "english": "Russian"
+    },
+    {
+      "code": "sv",
+      "native": "Svenska",
+      "english": "Swedish"
+    },
+    {
+      "code": "ta",
+      "native": "தமிழ்",
+      "english": "Tamil"
+    },
+    {
+      "code": "te",
+      "native": "తెలుగు",
+      "english": "Telugu"
+    },
+    {
+      "code": "tr",
+      "native": "Türkçe",
+      "english": "Turkish"
+    },
+    {
+      "code": "uk",
+      "native": "Українська мова",
+      "english": "Ukrainian"
+    },
+    {
+      "code": "vi",
+      "native": "Tiếng Việt",
+      "english": "Vietnamese"
+    },
+    {
+      "code": "zh-CN",
+      "native": "简体中文",
+      "english": "Simplified Chinese"
+    },
+    {
+      "code": "zh-TW",
+      "native": "繁體中文",
+      "english": "Traditional Chinese"
+    }
+  ],
+  "ui_text_by_language": {
+    "en": {
+      "description": "English UI text for Grok Imagine workflow",
+      "key_terms": {
+        "start_generation": "Start Generation",
+        "pause": "Pause",
+        "resume": "Resume",
+        "settings": "Settings",
+        "upscale": "Upscale Result",
+        "auto_download": "Auto-Download",
+        "global_suffix": "Global Suffix",
+        "scenes": "Scenes",
+        "timeout": "Timeout"
+      }
+    }
+  },
+  "notes": {
+    "total_languages": 29,
+    "supported_in_readme": ["English", "Spanish", "French", "German", "Chinese", "Japanese", "Russian", "Portuguese"],
+    "additional_languages_found": ["Arabic", "Bengali", "Czech", "Persian", "Filipino", "Hindi", "Hungarian", "Indonesian", "Italian", "Korean", "Marathi", "Dutch", "Polish", "Romanian", "Swedish", "Tamil", "Telugu", "Turkish", "Ukrainian", "Vietnamese"]
+  }
+}
