@@ -513,22 +513,22 @@ if (window.GrokLoopInjected) {
                 const possibleBtns = container.querySelectorAll('button');
                 possibleBtns.forEach(b => {
                     const label = (b.ariaLabel || b.title || '').toLowerCase();
-                    
+
                     // Strict filters to avoid clicking X buttons for modals/sidebars
                     // Skip if button is not truly part of the attachment thumbnail
                     if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) {
                         return; // Skip navigation elements
                     }
-                    
+
                     // Check if label matches a remove keyword
                     const isRemoveBtn = TRANSLATIONS.remove.some(k => label.includes(k));
-                    
+
                     // Additional safety: "close" alone is too generic
                     // Must match more specific keywords like "remove", "delete", "eliminate", etc.
                     // OR be near the actual thumbnail element
                     const closeOnlyLabel = label.trim() === 'close';
                     const isCloseBtn = label.includes('close');
-                    
+
                     if (isRemoveBtn && !closeOnlyLabel) {
                         // If it says "close" but also has other keywords, it's likely an attachment close button
                         removeBtns.push(b);
@@ -550,7 +550,7 @@ if (window.GrokLoopInjected) {
                 // Double check it's not the main upload button
                 const label = (btn.ariaLabel || btn.title || '').toLowerCase();
                 if (TRANSLATIONS.upload.some(k => label.includes(k))) continue;
-                
+
                 // Final safety check: verify button is still in DOM and visible
                 if (!document.contains(btn) || btn.offsetParent === null) continue;
 
@@ -1286,6 +1286,9 @@ if (window.GrokLoopInjected) {
         },
 
         togglePause(shouldResume, resumePayload) {
+            // Default to toggle if no argument provided (e.g. from UI button)
+            if (shouldResume === undefined) shouldResume = !state.isRunning;
+
             state.isRunning = shouldResume;
 
             if (shouldResume) {
@@ -1325,13 +1328,41 @@ if (window.GrokLoopInjected) {
                     });
 
                     // 3. Handle Resume Logic (If we were finished but now have more work)
-                    if (state.currentSegmentIndex === -1 && state.segments.length > 0) {
+                    if (state.currentSegmentIndex === -1 || (state.currentSegmentIndex >= state.segments.length - 1 && ['done', 'error'].some(s => state.segments[state.segments.length - 1].status.includes(s)))) {
                         // Find the first pending segment
-                        const firstPending = state.segments.findIndex(s => s.status === 'pending');
-                        if (firstPending !== -1) {
-                            console.log(`Resume requested on finished loop. Found new pending segment at ${firstPending}. Restarting queue...`);
-                            state.currentSegmentIndex = firstPending;
-                            // Ensure strict mode isn't blocked? existing isRunning=true handles it.
+                        let connectionPoint = state.segments.findIndex(s => s.status === 'pending');
+
+                        // If no pending, look for errors to retry
+                        if (connectionPoint === -1) {
+                            const firstError = state.segments.findIndex(s => s.status.includes('error'));
+                            if (firstError !== -1) {
+                                console.log('Resume: No pending segments. Retrying errors...');
+                                // Reset errors to pending
+                                state.segments.forEach(s => {
+                                    if (s.status.includes('error')) s.status = 'pending';
+                                });
+                                connectionPoint = firstError;
+                            }
+                        }
+
+                        // If still no connection point (all done), Restart Loop?
+                        if (connectionPoint === -1 && state.segments.length > 0) {
+                            console.log('Resume: All done. Restarting loop from scratch...');
+                            state.segments.forEach(s => {
+                                s.status = 'pending';
+                                s.videoUrl = null;
+                                s.inputImage = null; // Clear generated images? Optional. 
+                                // Probably safer to NOT clear inputImage if it was custom.
+                                // But if it was extracted, maybe we should? 
+                                // Let's keep specific resetting minimal. 
+                                // regenerateSegment resets inputImage only if cascaded.
+                            });
+                            connectionPoint = 0;
+                        }
+
+                        if (connectionPoint !== -1) {
+                            console.log(`Resume requested on finished/stopped loop. Restarting queue at ${connectionPoint}...`);
+                            state.currentSegmentIndex = connectionPoint;
                         }
                     }
                 }
@@ -1437,12 +1468,15 @@ if (window.GrokLoopInjected) {
                 if (!state.isRunning) break;
             }
 
-            if (state.currentSegmentIndex >= state.segments.length - 1 && state.segments[state.segments.length - 1].status === 'done') {
-                state.isRunning = false;
-                state.currentSegmentIndex = -1;
-                this.dashboard.update();
-                chrome.storage.local.remove('grokLoopState');
-                console.log('Loop finished. State cleared.');
+            if (state.currentSegmentIndex >= state.segments.length - 1) {
+                const lastSeg = state.segments[state.segments.length - 1];
+                if (lastSeg.status === 'done' || lastSeg.status.includes('error')) {
+                    state.isRunning = false;
+                    state.currentSegmentIndex = -1;
+                    this.dashboard.update();
+                    chrome.storage.local.remove('grokLoopState');
+                    console.log('Loop finished. State cleared.');
+                }
             }
         },
 
