@@ -15,26 +15,222 @@ if (window.GrokLoopInjected) {
     // --- Selectors ---
     // --- Multi-Language Support ---
     const TRANSLATIONS = {
-        send: ['send', 'post', 'submit', 'enviar', 'publicar', 'envoyer', 'publier', 'absenden', 'senden', 'veröffentlichen', '发送', '发布', '送信', '投稿', 'отправить', 'enviar'],
-        makeVideo: ['make video', 'generate', 'create video', 'crear video', 'generar', 'créer une vidéo', 'générer', 'video erstellen', 'generieren', '生成视频', '制作视频', '動画を作成', 'создать видео', 'criar vídeo'],
-        upload: ['add photos', 'add image', 'upload', 'añadir', 'subir', 'ajouter', 'importer', 'hochladen', 'hinzufügen', '添加', '上传', '追加', 'загрузить', 'adicionar'],
-        regenerate: ['redo', 'regenerate', 'try again', 'retry', 'vary', 'regenerar', 'intentar de nuevo', 'variar', 'régénérer', 'réessayer', 'neu erzeugen', 'erneut versuchen', '重新生成', '再試行', 'регенерировать', 'regenerar'],
-        remove: ['remove', 'delete', 'close', 'eliminar', 'quitar', 'cerrar', 'supprimer', 'fermer', 'entfernen', 'schließen', '删除', '关闭', '削除', '閉じる', 'удалить', 'remover', 'fechar'],
-        moderation: ['content moderated', 'try a different idea', 'contenido moderado', 'contenu modéré', 'moderiert', '内容已过滤', '內容已過濾', '不適切なコンテンツ', 'контент модерируется', 'conteúdo moderado'],
+        send: [
+            'send', 'post', 'submit', // English
+            'enviar', 'publicar', // Spanish, Portuguese
+            'envoyer', 'publier', // French
+            'absenden', 'senden', 'veröffentlichen', // German
+            '发送', '发布', // Chinese (Simplified)
+            '發送', '發布', // Chinese (Traditional)
+            '送信', '投稿', // Japanese
+            'отправить', // Russian
+            'gönder', 'yayınla', // Turkish
+            'kirmizi', 'kirim', // Indonesian
+            'versturen', 'plaatsen', // Dutch
+            'invia', 'pubblica', // Italian
+            'wyslij', 'wyślij', 'opublikuj', // Polish
+            'trimitere', 'publica', // Romanian
+            'skicka', 'publicera', // Swedish
+            'gửi', 'đăng', // Vietnamese
+            'odeslat', 'zveřejnit', // Czech
+            'küldés', 'közzététel', // Hungarian
+            'إرسال', 'نشر', // Arabic
+            'ارسال', 'انتشار', // Persian (Farsi)
+            'bago', 'ipadala', // Filipino (Tagalog) - 'ipadala' = send
+            '보내기', '게시', // Korean
+            'भेजें', 'post', // Hindi
+            'পাঠান', 'post', // Bengali
+            'पाठवा', // Marathi
+            'அனுப்பு', // Tamil
+            'ப public', // Tamil (likely post/publish context dependent, keeping simple)
+            'pampishandi', // Telugu (approx) -> 'pampinku' is send
+            'nadisonla', // Telugu
+            'відправити', 'опублікувати' // Ukrainian
+        ],
+        makeVideo: [
+            'make video', 'generate', 'create video', // English
+            'crear video', 'generar', // Spanish
+            'créer une vidéo', 'générer', // French
+            'video erstellen', 'generieren', // German
+            '生成视频', '制作视频', // Chinese (Simplified)
+            '生成影片', '製作影片', // Chinese (Traditional)
+            '動画を作成', // Japanese
+            'создать видео', // Russian
+            'video oluştur', 'oluştur', // Turkish
+            'buat video', // Indonesian
+            'video maken', // Dutch
+            'crea video', 'genera', // Italian
+            'utwórz wideo', 'generuj', // Polish
+            'creează video', // Romanian
+            'skapa video', // Swedish
+            'tạo video', // Vietnamese
+            'vytvořit video', // Czech
+            'videó készítése', // Hungarian
+            'إنشاء فيديو', // Arabic
+            'ساخت ویدیو', // Persian
+            'gumawa ng video', // Filipino
+            '동영상 만들기', '생성', // Korean
+            'video banaye', // Hindi
+            'ভিডিও তৈরি করুন', // Bengali
+            'video banva', // Marathi
+            'வீடியோ உருவாக்கு', // Tamil
+            'video tayar', // Telugu
+            'створити відео' // Ukrainian
+        ],
+        upload: [
+            'add photos', 'add image', 'upload', // English
+            'añadir', 'subir', // Spanish
+            'ajouter', 'importer', // French
+            'hochladen', 'hinzufügen', // German
+            '添加', '上传', // Chinese (Simplified)
+            '新增', '上傳', // Chinese (Traditional)
+            '追加', // Japanese
+            'загрузить', // Russian
+            'yükle', 'ekle', // Turkish
+            'unggah', 'tambah', // Indonesian
+            'uploaden', 'toevoegen', // Dutch
+            'carica', 'aggiungi', // Italian
+            'prześlij', 'dodaj', // Polish
+            'încarcă', 'adaugă', // Romanian
+            'ladda upp', 'lägg till', // Swedish
+            'tải lên', 'thêm', // Vietnamese
+            'nahrát', 'přidat', // Czech
+            'feltöltés', 'hozzáadás', // Hungarian
+            'تحميل', 'إضافة', // Arabic
+            'بارگذاری', 'افزودن', // Persian
+            'mag-upload', 'magdagdag', // Filipino
+            '업로드', '추가', // Korean
+            'upload', 'jode', // Hindi
+            'aplod', // Bengali
+            'upload', // Marathi
+            'yetr', // Tamil (upload)
+            'ekk', // Telugu (upload)
+            'adicionar', // Portuguese
+            'завантажити', 'додати' // Ukrainian
+        ],
+        regenerate: [
+            'redo', 'regenerate', 'try again', 'retry', 'vary', // English
+            'regenerar', 'intentar de nuevo', 'variar', // Spanish
+            'régénérer', 'réessayer', // French
+            'neu erzeugen', 'erneut versuchen', // German
+            '重新生成', // Chinese (Simplified)
+            '重新生成', // Chinese (Traditional)
+            '再試行', // Japanese
+            'регенерировать', // Russian
+            'yeniden oluştur', 'tekrar dene', // Turkish
+            'buat ulang', 'coba lagi', // Indonesian
+            'opnieuw', 'probeer opnieuw', // Dutch
+            'rigenera', 'riprova', // Italian
+            'wygeneruj ponownie', 'spróbuj ponownie', // Polish
+            'regenerează', 'încearcă din nou', // Romanian
+            'regenerera', 'försök igen', // Swedish
+            'tạo lại', 'thử lại', // Vietnamese
+            'regenerovat', 'zkusit znovu', // Czech
+            'újragonerálás', 'próbáld újra', // Hungarian
+            'إعادة التوليد', 'حاول مرة أخرى', // Arabic
+            'تولید مجدد', 'تلاش مجدد', // Persian
+            'muling buuin', // Filipino
+            '재생성', '다시 시도', // Korean
+            'phir se banaye', // Hindi
+            'abar korun', // Bengali
+            'punha banva', // Marathi
+            'meendum', // Tamil
+            'malli', // Telugu
+            'відтворити', 'спробувати ще раз' // Ukrainian
+        ],
+        remove: [
+            'remove', 'delete', 'close', // English
+            'eliminar', 'quitar', 'cerrar', // Spanish
+            'supprimer', 'fermer', // French
+            'entfernen', 'schließen', // German
+            '删除', '关闭', // Chinese (Simplified)
+            '刪除', '關閉', // Chinese (Traditional)
+            '削除', '閉じる', // Japanese
+            'удалить', // Russian
+            'kaldır', 'sil', 'kapat', // Turkish
+            'hapus', 'tutup', // Indonesian
+            'verwijderen', 'sluiten', // Dutch
+            'rimuovi', 'elimina', 'chiudi', // Italian
+            'usuń', 'zamknij', // Polish
+            'elimina', 'închide', // Romanian
+            'ta bort', 'stäng', // Swedish
+            'xóa', 'đóng', // Vietnamese
+            'odstranit', 'zavřít', // Czech
+            'eltávolít', 'bezár', // Hungarian
+            'إزالة', 'حذف', 'إغلاق', // Arabic
+            'حذف', 'بستن', // Persian
+            'alisin', 'isara', // Filipino
+            '삭제', '닫기', // Korean
+            'hataye', 'band kare', // Hindi
+            'muche felun', // Bengali
+            'kadhun taka', // Marathi
+            'neeku', // Tamil
+            'tīsi', // Telugu
+            'remover', 'fechar', // Portuguese
+            'видалити', 'закрити' // Ukrainian
+        ],
+        moderation: [
+            'content moderated', 'try a different idea', // English
+            'contenido moderado', // Spanish
+            'contenu modéré', // French
+            'moderiert', // German
+            '内容已过滤', // Chinese (Simplified)
+            '內容已過濾', // Chinese (Traditional)
+            '不適切なコンテンツ', // Japanese
+            'контент модерируется', // Russian
+            'içerik denetlendi', // Turkish
+            'konten dimoderasi', // Indonesian
+            'inhoud gemodereerd', // Dutch
+            'contenuto moderato', // Italian
+            'treść moderowana', // Polish
+            'conținut moderat', // Romanian
+            'innehåll modererat', // Swedish
+            'nội dung đã kiểm duyệt', // Vietnamese
+            'obsah moderován', // Czech
+            'tartalom moderálva', // Hungarian
+            'محتوى خاضع للإشراف', // Arabic
+            'محتوا تعدیل شد', // Persian
+            'na-moderate ang nilalaman', // Filipino
+            '콘텐츠 검토됨', // Korean
+            'samagri sanyamit', // Hindi (Approx)
+            'moderet', // Bengali (borrowed)
+            'conteúdo moderado', // Portuguese
+            'контент модерується' // Ukrainian
+        ],
         upscale: [
             'upscale', 'enhance', // English
             'escalar', 'mejorar vídeo', 'mejorar video', 'optimizar', // Spanish
             'rehausser', 'améliorer la vidéo', 'améliorer', 'optimiser', // French
-            'hochskalieren', 'verbessern', 'optimieren', // German (Restored 'verbessern' but it's safe now due to priority logic)
+            'hochskalieren', 'verbessern', 'optimieren', // German
             '放大', '增强', '升级', '超分', '优化', // Chinese (Simplified)
             '升級', '升級影片', // Chinese (Traditional)
             'アップスケール', '高画質化', '強化', '改善', // Japanese
             'улучшить', 'масштабировать', 'оптимизировать', // Russian
-            'melhorar', 'otimizar' // Portuguese
+            'melhorar', 'otimizar', // Portuguese
+            'iyileştir', // Turkish
+            'tingkatkan', // Indonesian
+            'opschalen', // Dutch
+            'migliora', // Italian
+            'skaluj', 'ulepsz', // Polish
+            'îmbunătățește', // Romanian
+            'uppskala', // Swedish
+            'nâng cấp', // Vietnamese
+            'zvětšit', 'vylepšit', // Czech
+            'javítás', 'felskálázás', // Hungarian
+            'تحسين', // Arabic
+            'ارتقا', // Persian
+            'pabutihin', // Filipino
+            '업스케일', '향상', // Korean
+            'sudhare', // Hindi
+            'unnoto', // Bengali
+            'vadhva', // Marathi
+            'mempat', // Tamil
+            'penchu', // Telugu
+            'покращити' // Ukrainian
         ],
-        more: ['more', 'options', 'más', 'plus', 'mehr', '更多', 'その他', 'еще', 'mais'],
-        edit: ['edit', 'change', 'modify', 'editar', 'modifier', 'bearbeiten', '编辑', '編集', 'изменить'],
-        skip: ['skip', 'pass', 'saltar', 'passer', 'überspringen', '跳过', 'スキップ', 'пропустить', 'pular']
+        more: ['more', 'options', 'más', 'plus', 'mehr', '更多', 'その他', 'еще', 'mais', 'daha', 'lainnya', 'meer', 'altro', 'więcej', 'mai mult', 'mer', 'thêm', 'více', 'több', 'المزيد', 'بیشتر', 'higit pa', '더 보기', 'aur', 'aro', 'ankhin', 'melum', 'marian', 'ще'],
+        edit: ['edit', 'change', 'modify', 'editar', 'modifier', 'bearbeiten', '编辑', '編集', 'изменить', 'düzenle', 'ubah', 'bewerken', 'modifica', 'edytuj', 'editează', 'redigera', 'chỉnh sửa', 'upravit', 'szerkesztés', 'تعديل', 'ویرایش', 'i-edit', '편집', 'badle', 'sompadon', 'badla', 'thiruthu', 'marpp', 'redahuvat'],
+        skip: ['skip', 'pass', 'saltar', 'passer', 'überspringen', '跳过', 'スキップ', 'пропустить', 'pular', 'atla', 'lewati', 'overslaan', 'salta', 'pomiń', 'sari', 'hoppa över', 'bỏ qua', 'přeskočit', 'kihagyás', 'تخطي', 'رد شدن', 'laktawan', '건너뛰기', 'chode', 'bad din', 'soda', 'thavir', 'vadul', 'пропустити']
     };
 
     // --- Selectors ---
