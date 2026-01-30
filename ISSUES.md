@@ -1,9 +1,6 @@
 # Issue Tracking
 
 ## 🐛 Known Issues
-
-- **X Button Misclick**: Occasionally clicks on X, opening a new tab to x.com
-- **Multi-Language Incomplete**: Some keyword translations are missing, causing extension to timeout in non-English interfaces
 - **Background Tab Throttling**: Performance slows significantly when user navigates away from grok.com/imagine tab (Chrome browser limitation)
 - **Selector Brittleness**: The extension relies on DOM selectors which may break if Grok updates their UI
 
@@ -16,6 +13,10 @@
 - [ ] **Complete Multi-Language**: Add missing keyword translations for all supported languages
 - [ ] **Cloud Sync**: Sync settings across devices (currently local only)
 - [ ] **Custom CSS Selectors**: Allow advanced users to override selectors in settings if Grok UI changes
+
+## ✅ Resolved (v1.7.0)
+
+- **X Button Misclick**: Fixed by adding stricter DOM filters to avoid clicking modal/nav close buttons; "close" alone is now rejected as too generic
 
 ## ✅ Resolved (v1.6.1)
 
