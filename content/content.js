@@ -236,10 +236,13 @@ if (window.GrokLoopInjected) {
     // --- Selectors ---
     const SELECTORS = {
         textArea: 'textarea, div[contenteditable="true"], div[role="textbox"]',
+        // New Grok UI (Feb 2026) uses specific role-based textbox paragraphs
+        promptInput: 'div[role="textbox"] p, paragraph[role="presentation"]',
         // Note: Specific button selectors now handled dynamically via TRANSLATIONS
         uploadButton: 'button[aria-label], button[title], button svg rect',
         sendButton: 'button[type="submit"], button[aria-label]',
-        grokUpload: 'button[aria-label]'
+        grokUpload: 'button[aria-label]',
+        imagineMode: 'button:has(text="Imagine"), button:has(img[src*="imagine"])'
     };
 
     // --- State ---
@@ -562,18 +565,27 @@ if (window.GrokLoopInjected) {
         const maxRetries = Math.ceil(timeoutMs / retryDelay);
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
-            // ... (selector logic same as before) ...
             console.log(`Searching for input area (${attempt + 1}/${maxRetries})...`);
 
-            // 1. Precise selectors
-            inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]') ||
+            // 0. Ensure Imagine Mode is active (Feb 2026 UI)
+            const imagineBtn = document.querySelector(SELECTORS.imagineMode) || 
+                               Array.from(document.querySelectorAll('button')).find(b => b.innerText?.includes('Imagine'));
+            if (imagineBtn && !imagineBtn.classList.contains('active')) {
+                console.log('Activating Imagine mode...');
+                imagineBtn.click();
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            // 1. Precise selectors (Updated for Feb 2026)
+            inputArea = document.querySelector(SELECTORS.promptInput) ||
+                document.querySelector('div[contenteditable="true"][role="textbox"]') ||
                 document.querySelector('textarea[placeholder*="customize"]') ||
                 document.querySelector('input[placeholder*="customize"]');
 
             if (inputArea) break;
 
             // 2. Loose selectors
-            const candidates = Array.from(document.querySelectorAll('textarea, input[type="text"], div[contenteditable="true"]'));
+            const candidates = Array.from(document.querySelectorAll('textarea, input[type="text"], div[contenteditable="true"], p[role="presentation"]'));
             const visibleCandidates = candidates.filter(el => {
                 const style = window.getComputedStyle(el);
                 return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
