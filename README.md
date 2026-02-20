@@ -18,7 +18,7 @@ This tool allows you to create seamless video sequences by automatically using t
 *   **⇱ Side Panel Workflow:**
     *   **Native Integration:** Runs directly in the Chrome Side Panel for a seamless experience.
     *   **Optional Dashboard:** Toggle the floating on-page overlay if you prefer a clean view.
-*   **🌍 Multi-Language Support:** Works with Grok in English, Spanish, French, German, Chinese, Japanese, Russian, and Portuguese.
+*   **🌍 Multi-Language Support:** Fully native support for all Grok interface languages via intelligent translation mapping (no hardcoded English).
 *   **🛡️ Anti-Bot Protection:** 
     *   **Fast Human-Like Input:** Randomized timing but optimized for speed (Paste-like insertion).
     *   **Randomized Delays:** Unpredictable wait times to mimic human behavior.
@@ -100,7 +100,6 @@ Please report any issue here. Please include the following information when repo
 5.  **Grok Interface Language** (e.g. English, German).
 
 ## 🚧 Roadmap / Work in Progress
-*   **Active Development:** Multi-Language Support (Expanding translations for specific UI variations).
 *   **TODO:** Ensure all popups are always on top.
 *   **TODO:** Fix persistence/storage optimization.
 

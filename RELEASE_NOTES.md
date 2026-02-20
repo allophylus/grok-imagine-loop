@@ -1,5 +1,14 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.3
+- **Feature:** **Full Multi-Language Support**. The extension now works natively across all supported Grok languages without relying on hardcoded English text.
+- **Fix:** **Structural Button Detection**. Upscale buttons are now identified visually (via the `...` menu) instead of relying on keywords, fixing upscale detection across all languages.
+- **Fix:** **Prompt Replacement**. Completely rewrote the text insertion logic using the Range API to guarantee the text box is cleared before typing the next scene's prompt in the React editor.
+- **Fix:** **Missing `.mp4` Extensions**. Auto-downloaded videos now correctly save with the `.mp4` file extension instead of raw UUID blobs.
+- **Fix:** **Generation Timeout ("Broken Eye")**. Added instant visual detection for Grok's internal server generation failures, allowing the loop to retry immediately rather than waiting 2 minutes.
+- **Fix:** **Post View Escape Hatch**. Built a robust backward navigation system to ensure the loop never gets trapped inside an individual video post between scenes.
+- **Fix:** **Sidebar Accident Prevention**. Improved the button detection logic to strictly ignore the main left sidebar, preventing accidental navigation away from the gallery.
+
 ## v1.6.1 (Stable)
 *Consolidates all Beta 1-14 changes into a stable release.*
 
