@@ -198,7 +198,7 @@ if (window.GrokLoopInjected) {
             'контент модерується' // Ukrainian
         ],
         upscale: [
-            'upscale', 'enhance', // English
+            'upscale', 'enhance', 'hd', 'alta definizione', 'high definition', // English & generic
             'escalar', 'mejorar vídeo', 'mejorar video', 'optimizar', // Spanish
             'rehausser', 'améliorer la vidéo', 'améliorer', 'optimiser', // French
             'hochskalieren', 'verbessern', 'optimieren', // German
@@ -210,7 +210,7 @@ if (window.GrokLoopInjected) {
             'iyileştir', // Turkish
             'tingkatkan', // Indonesian
             'opschalen', // Dutch
-            'migliora', // Italian
+            'migliora', 'ottimizza video', // Italian
             'skaluj', 'ulepsz', // Polish
             'îmbunătățește', // Romanian
             'uppskala', // Swedish
@@ -230,19 +230,35 @@ if (window.GrokLoopInjected) {
         ],
         more: ['more', 'options', 'más', 'plus', 'mehr', '更多', 'その他', 'еще', 'mais', 'daha', 'lainnya', 'meer', 'altro', 'więcej', 'mai mult', 'mer', 'thêm', 'více', 'több', 'المزيد', 'بیشتر', 'higit pa', '더 보기', 'aur', 'aro', 'ankhin', 'melum', 'marian', 'ще'],
         edit: ['edit', 'change', 'modify', 'editar', 'modifier', 'bearbeiten', '编辑', '編集', 'изменить', 'düzenle', 'ubah', 'bewerken', 'modifica', 'edytuj', 'editează', 'redigera', 'chỉnh sửa', 'upravit', 'szerkesztés', 'تعديل', 'ویرایش', 'i-edit', '편집', 'badle', 'sompadon', 'badla', 'thiruthu', 'marpp', 'redahuvat'],
-        skip: ['skip', 'pass', 'saltar', 'passer', 'überspringen', '跳过', 'スキップ', 'пропустить', 'pular', 'atla', 'lewati', 'overslaan', 'salta', 'pomiń', 'sari', 'hoppa över', 'bỏ qua', 'přeskočit', 'kihagyás', 'تخطي', 'رد شدن', 'laktawan', '건너뛰기', 'chode', 'bad din', 'soda', 'thavir', 'vadul', 'пропустити']
+        skip: ['skip', 'pass', 'saltar', 'passer', 'überspringen', '跳过', 'スキップ', 'пропустить', 'pular', 'atla', 'lewati', 'overslaan', 'salta', 'pomiń', 'sari', 'hoppa över', 'bỏ qua', 'přeskočit', 'kihagyás', 'تخطي', 'رد شدن', 'laktawan', '건너뛰기', 'chode', 'bad din', 'soda', 'thavir', 'vadul', 'пропустити'],
+        rateLimit: [
+            'rate limit reached', 'upgrade to unlock more', 'limit exceeded', 'too many requests', // English
+            'límite de velocidad', 'límite alcanzado', 'demasiadas peticiones', // Spanish
+            'limite de débit', 'limite atteinte', 'trop de requêtes', // French
+            'ratenlimit erreicht', 'limit überschritten', // German
+            '达到了速率限制', '超过限制', '请求过多', // Chinese (Simplified)
+            '達到速率限制', '超過限制', // Chinese (Traditional)
+            'レート制限', '上限に達しました', // Japanese
+            'превышен лимит', 'слишком много запросов', // Russian
+            'limite de taxa', 'demasiadas solicitações', // Portuguese
+            'rate limit', 'limit' // Generic fallbacks
+        ],
+        imagineMode: [
+            'imagine', 'video', 'vídeo', 'vidéo', 'визуализировать', 'ভিডিও', 'വീഡിയോ', 'vidéo',
+            'إيماجن', ' تصور', 'видя', '视频', '影片'
+        ]
     };
 
     // --- Selectors ---
     const SELECTORS = {
         textArea: 'textarea, div[contenteditable="true"], div[role="textbox"]',
         // New Grok UI (Feb 2026) uses specific role-based textbox paragraphs
-        promptInput: 'div[role="textbox"] p, paragraph[role="presentation"]',
+        promptInput: 'div[role="textbox"] p, paragraph[role="presentation"], div[role="textbox"]',
         // Note: Specific button selectors now handled dynamically via TRANSLATIONS
         uploadButton: 'button[aria-label], button[title], button svg rect',
         sendButton: 'button[type="submit"], button[aria-label]',
         grokUpload: 'button[aria-label]',
-        imagineMode: 'button:has(text="Imagine"), button:has(img[src*="imagine"])'
+        imagineMode: 'button' // Dynamic search used in sendPromptToGrok
     };
 
     // --- State ---
@@ -301,7 +317,8 @@ if (window.GrokLoopInjected) {
             try {
                 const safeArgs = args.map(a => {
                     try {
-                        if (typeof a === 'object') return JSON.parse(JSON.stringify(a));
+                        if (a instanceof Error) return { message: a.message, stack: a.stack, name: a.name };
+                        if (typeof a === 'object' && a !== null) return JSON.parse(JSON.stringify(a));
                         return a;
                     } catch (e) {
                         return String(a);
@@ -371,22 +388,26 @@ if (window.GrokLoopInjected) {
     async function insertTextFast(element, text) {
         element.focus();
 
-        // Clear first
+        // Clear and Replace Strategy
         if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
             element.value = '';
         } else if (element.isContentEditable) {
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
+            // 1. Explicitly select all contents using Range API (fixes React/Slate edge cases where execCommand 'selectAll' fails)
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            // 2. Immediately overwrite the selection with the new text using insertText
+            // This is identical to a human pressing Cmd+A then Cmd+V
+            document.execCommand('insertText', false, text);
         }
 
         await new Promise(r => setTimeout(r, 50));
 
-        // Fast Insertion (Simulate Paste)
-        if (element.tagName === 'DIV' && element.isContentEditable) {
-            // execCommand 'insertText' mimics a user typing or pasting plain text
-            // It triggers input events automatically and works well with React
-            document.execCommand('insertText', false, text);
-        } else {
+        // For Textarea/Input (ContentEditable is already handled above)
+        if (element.tagName !== 'DIV' || !element.isContentEditable) {
             // For Textarea/Input, we need to be careful with React state
             const descriptor = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value") ||
                 Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
@@ -505,19 +526,10 @@ if (window.GrokLoopInjected) {
     async function uploadImageToGrok(input) {
         let fileInput = document.querySelector('input[type="file"]');
 
-        // Gentle Back Logic
+        // Note: The "Gentle Back" logic previously here was moved to processSegment() 
+        // to ensure it triggers even when no image is being uploaded.
+
         if (!fileInput) {
-            console.log('File input not found. Checking for Modal/Lightbox close...');
-            const closeButton = document.querySelector('button[aria-label="Close"]') || document.querySelector('button[aria-label="Back"]');
-
-            if (closeButton) {
-                console.log('In Post View. Navigation is required to upload next image.');
-                closeButton.click();
-                await new Promise(r => setTimeout(r, 1500));
-
-                fileInput = document.querySelector('input[type="file"]');
-                if (fileInput) console.log('File input found after navigation.');
-            }
 
             if (!fileInput) {
                 const buttons = Array.from(document.querySelectorAll('button'));
@@ -568,10 +580,18 @@ if (window.GrokLoopInjected) {
             console.log(`Searching for input area (${attempt + 1}/${maxRetries})...`);
 
             // 0. Ensure Imagine Mode is active (Feb 2026 UI)
-            const imagineBtn = document.querySelector(SELECTORS.imagineMode) || 
-                               Array.from(document.querySelectorAll('button')).find(b => b.innerText?.includes('Imagine'));
-            if (imagineBtn && !imagineBtn.classList.contains('active')) {
-                console.log('Activating Imagine mode...');
+            const imagineBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                // EXTREMELY IMPORTANT: Do not click the main Grok "Imagine" app icon in the sidebar nav
+                if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
+
+                const text = (b.innerText || b.textContent || b.ariaLabel || b.title || '').toLowerCase();
+                // Match translations for "Imagine", "Video", "Vídeo" etc.
+                return TRANSLATIONS.imagineMode.some(k => text.includes(k));
+            });
+            if (imagineBtn && !imagineBtn.classList.contains('active') && !imagineBtn.getAttribute('aria-selected')) {
+                // Heuristic to avoid clicking the wrong "Video" button. The mode toggle is usually a small button or a dropdown.
+                // We'll trust the selector.
+                console.log('Activating Imagine/Video mode...');
                 imagineBtn.click();
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -594,7 +614,7 @@ if (window.GrokLoopInjected) {
             // 2a. Strict Check
             inputArea = visibleCandidates.find(el => {
                 const placeholder = (el.placeholder || el.getAttribute('aria-placeholder') || el.innerText || '').toLowerCase();
-                return placeholder.includes('video') || placeholder.includes('customize') || placeholder.includes('prompt');
+                return placeholder.includes('video') || placeholder.includes('vídeo') || placeholder.includes('customize') || placeholder.includes('prompt') || placeholder.includes('imagin');
             });
 
             // 2b. Fallback
@@ -734,13 +754,16 @@ if (window.GrokLoopInjected) {
                     // Additional safety: "close" alone is too generic
                     // Must match more specific keywords like "remove", "delete", "eliminate", etc.
                     // OR be near the actual thumbnail element
-                    const closeOnlyLabel = label.trim() === 'close';
-                    const isCloseBtn = label.includes('close');
 
-                    if (isRemoveBtn && !closeOnlyLabel) {
+                    // We check if it matches ANY generic "close" term across languages
+                    const genericCloseTerms = ['close', 'cerrar', 'fermer', 'schließen', 'chiudi', 'zamknij', 'zavřít', 'fechar'];
+                    const isGenericCloseLabel = genericCloseTerms.some(term => label.trim() === term);
+                    const hasCloseKeyword = genericCloseTerms.some(term => label.includes(term));
+
+                    if (isRemoveBtn && !isGenericCloseLabel) {
                         // If it says "close" but also has other keywords, it's likely an attachment close button
                         removeBtns.push(b);
-                    } else if (!isCloseBtn && isRemoveBtn) {
+                    } else if (!hasCloseKeyword && isRemoveBtn) {
                         // If it matches remove/delete without the ambiguous "close", it's safe
                         removeBtns.push(b);
                     }
@@ -807,9 +830,10 @@ if (window.GrokLoopInjected) {
 
                 // Check for Content Moderation / Rate Limit via BROAD Text Scan
                 // (More robust than finding specific elements which might change classes)
-                const bodyText = document.body.innerText;
+                const bodyText = document.body.innerText.toLowerCase();
 
-                if (bodyText.includes('Rate limit reached') || bodyText.includes('Upgrade to unlock more')) {
+                // Multi-Language Rate Limit Check
+                if (TRANSLATIONS.rateLimit.some(k => bodyText.includes(k))) {
                     console.warn('Rate Limit Detected (Text Scan)!');
                     cleanup();
                     reject(new Error('Rate Limit Reached'));
@@ -817,12 +841,11 @@ if (window.GrokLoopInjected) {
                 }
 
                 // Multi-Language Moderation Check
-                if (TRANSLATIONS.moderation.some(k => bodyText.toLowerCase().includes(k))) {
+                if (TRANSLATIONS.moderation.some(k => bodyText.includes(k))) {
                     // Verify it's not just in the prompt textarea
                     // Find the element containing this text to be sure it's an alert/toast
                     const hints = Array.from(document.querySelectorAll('div, span, p')).filter(el =>
-                        el.innerText && (el.innerText.includes('Content Moderated') || el.innerText.includes('Try a different idea'))
-                        && el.offsetParent !== null
+                        el.innerText && TRANSLATIONS.moderation.some(k => el.innerText.toLowerCase().includes(k)) && el.offsetParent !== null
                     );
 
                     // If we found a visible element with this text, likely the toast
@@ -832,6 +855,33 @@ if (window.GrokLoopInjected) {
                         reject(new Error('Content Moderated'));
                         return;
                     }
+                }
+
+                // Check for "Broken Eye" Generation Failure icon
+                // The broken eye icon usually indicates a silent generation failure or error states
+                const svgs = Array.from(document.querySelectorAll('svg'));
+                const hasBrokenEye = svgs.some(svg => {
+                    // Ignore small UI buttons (like an 'X' or cancel) which might accidentally match the path heuristic
+                    const rect = svg.getBoundingClientRect();
+                    if (rect.width < 40 || rect.height < 40) return false;
+
+                    // Check if the SVG or its paths contain attributes typical of the slashed eye icon
+                    // We look for 'd' paths that represent a slash (often long diagonal coordinates)
+                    const paths = Array.from(svg.querySelectorAll('path')).map(p => p.getAttribute('d') || '');
+
+                    // The slashed eye icon typically has a path for the slash: e.g. M3 3l18 18 or similar diagonal
+                    // and paths for the eye. We check for a general heuristic:
+                    const hasSlashPath = paths.some(d => d.includes('M2 2l20 20') || d.includes('m2 2 20 20') || d.includes('M3 3l18 18') || d.includes('m3 3 18 18') || d.includes('L22 22') || d.includes('l18 18'));
+                    const isPotentiallyEye = paths.some(d => d.includes('A') || d.includes('a') || d.includes('c') || d.includes('C')); // Curves for the eye
+
+                    return hasSlashPath && isPotentiallyEye && svg.offsetParent !== null;
+                });
+
+                if (hasBrokenEye) {
+                    console.warn('Generation Failure Detected (Broken Eye Icon)!');
+                    cleanup();
+                    reject(new Error('Generation Failed (Broken UI Icon)'));
+                    return;
                 }
             };
 
@@ -859,8 +909,15 @@ if (window.GrokLoopInjected) {
                 // Ignore navigation elements
                 if (el.closest('nav') || el.closest('[role="navigation"]')) return false;
 
-                const content = (el.innerText || el.ariaLabel || el.textContent || '').toLowerCase();
-                const match = translationKeys.find(k => content.includes(k));
+                const svgTitle = el.querySelector('svg title')?.textContent || '';
+                const content = (el.innerText || el.ariaLabel || el.title || el.textContent || svgTitle).toLowerCase();
+
+                const match = translationKeys.find(k => {
+                    // special handling for short keywords like "hd" to require word boundaries
+                    if (k === 'hd') return content === 'hd' || content.includes(' hd') || content.includes('hd ') || content.includes(' hd ') || content.includes('[hd');
+                    return content.includes(k);
+                });
+
                 if (match && !el.disabled) {
                     console.log(`[Upscale Debug] Match found for keys [${translationKeys[0]}...]: "${match}" in "${content}"`);
                     return true;
@@ -869,22 +926,66 @@ if (window.GrokLoopInjected) {
             });
         };
 
-        // 1. Try finding 'Upscale' directly
-        let upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
+        // NEW STRATEGY: Structural DOM Proximity
+        // 1. Find the universal "More" button (...) first
+        let moreBtn = Array.from(mainContent.querySelectorAll('button')).find(b => {
+            if (b.closest('nav') || b.closest('[role="navigation"]')) return false;
+
+            // Check for text "..."
+            const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
+            if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
+
+            // Check for SVG structure (3 dots = 3 circles or a path drawing 3 dots)
+            const svgs = b.querySelectorAll('svg');
+            if (svgs.length > 0) {
+                for (let svg of svgs) {
+                    const title = (svg.querySelector('title')?.textContent || '').toLowerCase();
+                    if (TRANSLATIONS.more.some(k => title.includes(k))) return true;
+
+                    // Heuristic: Does the SVG have exactly 3 circles? (Standard "... " icon)
+                    const circles = svg.querySelectorAll('circle');
+                    if (circles.length === 3) return true;
+                }
+            }
+            return false;
+        });
+
+        let upscaleBtn = null;
+
+        if (moreBtn) {
+            console.log('Found "More (...)" button for structural reference.');
+            // 2. The Upscale button is typically the immediate previous sibling in the toolbar
+            const prevSibling = moreBtn.previousElementSibling;
+
+            // Verify the sibling is a button or has SVG
+            if (prevSibling && (prevSibling.tagName === 'BUTTON' || prevSibling.querySelector('svg'))) {
+                console.log('Found Upscale button via structural proximity (previous sibling)!');
+                upscaleBtn = prevSibling;
+            } else {
+                console.log('Previous sibling is not a button. Checking container...');
+                // Fallback structual: get all buttons in the container and take the one before `moreBtn`
+                const container = moreBtn.parentElement;
+                if (container) {
+                    const siblings = Array.from(container.querySelectorAll('button'));
+                    const moreIndex = siblings.indexOf(moreBtn);
+                    if (moreIndex > 0) {
+                        upscaleBtn = siblings[moreIndex - 1];
+                        console.log('Found Upscale button via sibling index!');
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: Try finding 'Upscale' directly via translations if structural check failed
+        if (!upscaleBtn || upscaleBtn.disabled) {
+            console.log('Structural Upscale search failed. Falling back to localized translations...');
+            upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
+        }
 
         if (!upscaleBtn) {
             console.log('Upscale button not found directly. Checking "More" menu...');
 
-            // 2. Find "More" button (...) - Scoped to Main
-
-            // Strategy C: Inner Text "..." (Visual Icon - Highest Priority)
-            let moreBtn = Array.from(mainContent.querySelectorAll('button')).find(b => {
-                if (b.closest('nav') || b.closest('[role="navigation"]')) return false;
-                const text = (b.innerText || '').trim();
-                return text.includes('...') || text.includes('…');
-            });
-
-            // Strategy B: Proximity to "Edit" (Refined)
+            // If we didn't find the moreBtn earlier, try other strategies to find it
             if (!moreBtn) {
                 console.log('Strategy C failed. Trying Strategy B (Proximity to Edit)...');
                 const editBtn = findLocalizedBtn(TRANSLATIONS.edit, mainContent);
@@ -893,7 +994,6 @@ if (window.GrokLoopInjected) {
                     const container = editBtn.parentElement;
                     if (container) {
                         const siblings = Array.from(container.querySelectorAll('button'));
-                        // The "More" button is usually the last one
                         const lastBtn = siblings[siblings.length - 1];
                         if (lastBtn && lastBtn !== editBtn) {
                             console.log('Found potential "More" button via proximity (last sibling).');
@@ -1607,14 +1707,15 @@ if (window.GrokLoopInjected) {
                 // 1. Placeholder Check (Targeted)
                 const inputs = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
                 const foundPlaceholder = inputs.some(el => {
-                    const ph = el.getAttribute('placeholder');
-                    return ph && (ph.includes('Type to customize video') || ph.includes('Customize video'));
+                    const ph = (el.getAttribute('placeholder') || el.innerText || '').toLowerCase();
+                    return ph.includes('type to customize') || ph.includes('type to imagine') || ph.includes('customize video') || ph.includes('imagin');
                 });
 
                 // 2. Button State Check (Backup)
-                const makeBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                    b.innerText.includes('Make video') && !b.disabled && !b.classList.contains('disabled')
-                );
+                const makeBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                    const text = (b.innerText || '').toLowerCase();
+                    return TRANSLATIONS.makeVideo.some(k => text.includes(k)) && !b.disabled && !b.classList.contains('disabled');
+                });
 
                 if (foundPlaceholder || makeBtn) {
                     console.log('Upload success confirmed.');
@@ -1702,7 +1803,31 @@ if (window.GrokLoopInjected) {
                     seg.status = 'working';
                     this.dashboard.update();
 
-                    // 0. Clean Input State (Likely fixes "Leaked Image" bug)
+                    // --- 0. Ensure Main Dashboard (Escape Post View) ---
+                    // Crucial fix: If we are on an individual post from a previous segment,
+                    // we MUST exit to the main gallery/compose view before doing ANYTHING.
+                    if (window.location.pathname.includes('/post/')) {
+                        console.log('Currently in Post View. Navigating back to main compose screen...');
+                        window.history.back();
+                        await new Promise(r => setTimeout(r, 2000));
+
+                        // Fallback click on close/back button if history.back didn't work immediately
+                        if (window.location.pathname.includes('/post/')) {
+                            console.log('Still in Post View. Attempting UI fallback click...');
+                            const buttons = Array.from(document.querySelectorAll('button'));
+                            const closeButton = buttons.find(b => {
+                                const label = (b.ariaLabel || b.title || '').toLowerCase();
+                                return label.includes('back') || TRANSLATIONS.remove.some(k => label.includes(k));
+                            });
+
+                            if (closeButton) {
+                                closeButton.click();
+                                await new Promise(r => setTimeout(r, 1500));
+                            }
+                        }
+                    }
+
+                    // 1. Clean Input State (Likely fixes "Leaked Image" bug)
                     await clearInputAttachments();
 
                     // 1. Input Image
@@ -1889,6 +2014,24 @@ if (window.GrokLoopInjected) {
                         return; // Stop.
                     }
 
+                    // Generation Failure (Broken UI Icon)
+                    if (err.message && err.message.includes('Broken UI Icon')) {
+                        console.warn('Generation Failed internally on Grok side (Broken Eye Icon).');
+                        seg.status = `failed (attempt ${attempt + 1}/${maxRetries + 1})`;
+                        this.dashboard.update();
+
+                        if (attempt >= maxRetries && !state.config.continueOnFailure) {
+                            console.error('Max retries reached for internal generation failure. Pausing.');
+                            state.isRunning = false;
+                            alert(`Loop Paused: Segment ${index + 1} failed repeatedly to generate.\n\nOption 'Continue on Failure' is disabled.`);
+                            return;
+                        }
+
+                        console.log('Retrying in 5 seconds...');
+                        await new Promise(r => setTimeout(r, 5000));
+                        continue; // Retry standard loop
+                    }
+
                     // Content Moderation
                     if (err.message === 'Content Moderated') {
                         // Check if Pause on Moderation is ENABLED
@@ -2010,13 +2153,27 @@ if (window.GrokLoopInjected) {
         },
 
         downloadSegment(index) {
-            // ...
             const seg = state.segments[index];
             if (seg.videoUrl) {
-                chrome.runtime.sendMessage({
-                    action: 'DOWNLOAD_VIDEO',
-                    payload: { url: seg.videoUrl, filename: `grok_loop_segment_${index + 1}.mp4` }
-                });
+                const filename = `grok_loop_segment_${index + 1}.mp4`;
+
+                // For Blob URLs, Background script downloads randomly strip filenames and use UUIDs.
+                // Doing it via an anchor tag in the content script preserves the filename perfectly.
+                if (seg.videoUrl.startsWith('blob:')) {
+                    const a = document.createElement('a');
+                    a.href = seg.videoUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    console.log(`Triggered local download for ${filename}`);
+                } else {
+                    // Fallback to background script for standard URLs (CORS handling)
+                    chrome.runtime.sendMessage({
+                        action: 'DOWNLOAD_VIDEO',
+                        payload: { url: seg.videoUrl, filename: filename }
+                    });
+                }
             }
         }
     };
