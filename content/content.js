@@ -1050,10 +1050,20 @@ if (window.GrokLoopInjected) {
                 if (!isOpen) {
                     console.log('Menu did not open. Retrying with native click() and Pointer events...');
                     // Attempt 2: Native Click + Force
+                    moreBtn.focus();
                     moreBtn.click();
+
+                    // Comprehensive Event Sequence for Firefox/Radix
+                    const evOpts = { bubbles: true, cancelable: true, view: window };
+                    moreBtn.dispatchEvent(new MouseEvent('mousedown', evOpts));
+                    moreBtn.dispatchEvent(new MouseEvent('mouseup', evOpts));
+
                     const pointerOpts = { bubbles: true, cancelable: true, view: window, pointerId: 1, isPrimary: true, button: 0 };
-                    moreBtn.dispatchEvent(new PointerEvent('pointerdown', pointerOpts));
-                    moreBtn.dispatchEvent(new PointerEvent('pointerup', pointerOpts));
+                    try {
+                        moreBtn.dispatchEvent(new PointerEvent('pointerdown', pointerOpts));
+                        moreBtn.dispatchEvent(new PointerEvent('pointerup', pointerOpts));
+                    } catch (e) { /* Firefox might throw on PointerEvent instantiation in some contexts */ }
+
                     await new Promise(r => setTimeout(r, 1000));
                 }
 
