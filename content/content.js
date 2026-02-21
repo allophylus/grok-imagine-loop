@@ -972,6 +972,33 @@ if (window.GrokLoopInjected) {
                 return false;
             });
 
+            // NEW HEURISTIC: "Video settings button next to the up arrow" 
+            // Often, it's the direct previous sibling to the submit button in the input row.
+            const submitBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                const aria = (b.ariaLabel || b.title || '').toLowerCase();
+                return aria.includes('submit') || aria.includes('send') || (b.type === 'submit') || b.querySelector('path[d*="M2 21v-5"]'); // Random heuristical shapes for send arrow
+            }) || document.querySelector('button[type="submit"]');
+
+            if (submitBtn && submitBtn.previousElementSibling) {
+                // If the previous element is a button or has role button, it's highly likely the Video Mode/Settings dropdown
+                const prev = submitBtn.previousElementSibling;
+                if (prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') {
+                    console.log('Found potential Video Settings dropdown next to Submit button!');
+                    menuBtns.unshift(prev); // Prioritize this one based on recent UI changes!
+                } else if (submitBtn.parentElement) {
+                    // Sometimes there's a wrapper, search siblings backwards
+                    const siblings = Array.from(submitBtn.parentElement.children);
+                    const idx = siblings.indexOf(submitBtn);
+                    for (let i = idx - 1; i >= 0; i--) {
+                        if (siblings[i].tagName === 'BUTTON' || siblings[i].getAttribute('role') === 'button') {
+                            console.log('Found potential Video Settings dropdown in Submit button container!');
+                            menuBtns.unshift(siblings[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
             // Additionally try to find by proximity to Edit/Redo if standard more button fails
             if (menuBtns.length === 0) {
                 const actionBtn = findLocalizedBtn(TRANSLATIONS.regenerate, mainContent) || findLocalizedBtn(TRANSLATIONS.edit, mainContent);
