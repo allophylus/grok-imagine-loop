@@ -911,8 +911,8 @@ if (window.GrokLoopInjected) {
             if (!scope) return null;
             const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"], div[role="option"], li, a'));
             return elements.find(el => {
-                // Ignore navigation elements and sidebars
-                if (el.closest('nav') || el.closest('[role="navigation"]') || el.closest('aside')) return false;
+                // Ignore navigation elements, sidebars, and explicitly HISTORY sections
+                if (el.closest('nav') || el.closest('[role="navigation"]') || el.closest('aside') || el.closest('[class*="history" i]') || el.closest('[id*="history" i]')) return false;
 
                 // Ignore invisible elements
                 if (el.offsetParent === null) return false;
@@ -935,7 +935,7 @@ if (window.GrokLoopInjected) {
                 const match = translationKeys.find(k => {
                     // special handling for short keywords like "hd" to require word boundaries
                     if (k === 'hd') return content === 'hd' || content.includes(' hd') || content.includes('hd ') || content.includes(' hd ') || content.includes('[hd');
-                    return content.includes(k);
+                    return content === k || content.includes(k);
                 });
 
                 if (match && !el.disabled) {
@@ -959,12 +959,12 @@ if (window.GrokLoopInjected) {
             // The user provided the HTML for the exact new button: it contains a specific SVG or the literal characters "..."
             let menuBtns = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).filter(b => {
                 // EXPLICITLY ignore anything in the sidebar/history area
-                if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
+                if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside') || b.closest('[class*="history" i]') || b.closest('[id*="history" i]')) return false;
 
                 const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
                 if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
 
-                // Also check for SVG with 3 dots, gear/settings icon, or EXACT attributes provided by user
+                // Also check for SVG with 3 dots, gear/settings icon
                 const svgs = b.querySelectorAll('svg');
                 if (svgs.length > 0) {
                     for (let svg of svgs) {
@@ -987,7 +987,7 @@ if (window.GrokLoopInjected) {
             for (const svg of document.querySelectorAll('svg')) {
                 if (svg.classList.contains('stroke-[2]') && svg.classList.contains('transition-transform')) {
                     exactBtn = svg.closest('button, div[role="button"]');
-                    if (exactBtn && !exactBtn.closest('aside')) break;
+                    if (exactBtn && !exactBtn.closest('aside') && !exactBtn.closest('[class*="history" i]')) break;
                 }
             }
             if (exactBtn) {
