@@ -372,11 +372,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Prompt Input (Individual)
             const textarea = item.querySelector('.scene-prompt');
             textarea.value = scene.prompt;
+            let debounceTimer;
             textarea.addEventListener('input', (e) => {
-                scene.prompt = e.target.value;
                 autoResize(e.target);
-                saveScenes();
-                updateBulkFromScenes(); // Sync back to bulk
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    scene.prompt = e.target.value;
+                    saveScenes();
+                    updateBulkFromScenes(); // Sync back to bulk
+                }, 800); // 800ms debounce
+            });
+
+            // Fallback: save immediately when they leave the field
+            textarea.addEventListener('blur', (e) => {
+                clearTimeout(debounceTimer);
+                if (scene.prompt !== e.target.value) {
+                    scene.prompt = e.target.value;
+                    saveScenes();
+                    updateBulkFromScenes();
+                }
             });
             // Auto-resize textarea
             setTimeout(() => autoResize(textarea), 0);
