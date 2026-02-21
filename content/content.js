@@ -910,8 +910,8 @@ if (window.GrokLoopInjected) {
         const findLocalizedBtn = (translationKeys, scope = document) => {
             const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"], div[role="option"], li, a'));
             return elements.find(el => {
-                // Ignore navigation elements
-                if (el.closest('nav') || el.closest('[role="navigation"]')) return false;
+                // Ignore navigation elements and sidebars
+                if (el.closest('nav') || el.closest('[role="navigation"]') || el.closest('aside')) return false;
 
                 // Ignore invisible elements
                 if (el.offsetParent === null) return false;
@@ -952,7 +952,8 @@ if (window.GrokLoopInjected) {
 
             // Find the universal "More" button (...) or settings button
             let menuBtns = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).filter(b => {
-                if (b.closest('nav') || b.closest('[role="navigation"]')) return false;
+                // EXPLICITLY ignore anything in the sidebar/history area
+                if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
 
                 const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
                 if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
@@ -975,6 +976,7 @@ if (window.GrokLoopInjected) {
             // NEW HEURISTIC: "Video settings button next to the up arrow" 
             // Often, it's the direct previous sibling to the submit button in the input row.
             const submitBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
                 const aria = (b.ariaLabel || b.title || '').toLowerCase();
                 return aria.includes('submit') || aria.includes('send') || (b.type === 'submit') || b.querySelector('path[d*="M2 21v-5"]'); // Random heuristical shapes for send arrow
             }) || document.querySelector('button[type="submit"]');
@@ -982,7 +984,7 @@ if (window.GrokLoopInjected) {
             if (submitBtn && submitBtn.previousElementSibling) {
                 // If the previous element is a button or has role button, it's highly likely the Video Mode/Settings dropdown
                 const prev = submitBtn.previousElementSibling;
-                if (prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') {
+                if ((prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') && !prev.closest('aside')) {
                     console.log('Found potential Video Settings dropdown next to Submit button!');
                     menuBtns.unshift(prev); // Prioritize this one based on recent UI changes!
                 } else if (submitBtn.parentElement) {
@@ -990,7 +992,7 @@ if (window.GrokLoopInjected) {
                     const siblings = Array.from(submitBtn.parentElement.children);
                     const idx = siblings.indexOf(submitBtn);
                     for (let i = idx - 1; i >= 0; i--) {
-                        if (siblings[i].tagName === 'BUTTON' || siblings[i].getAttribute('role') === 'button') {
+                        if ((siblings[i].tagName === 'BUTTON' || siblings[i].getAttribute('role') === 'button') && !siblings[i].closest('aside')) {
                             console.log('Found potential Video Settings dropdown in Submit button container!');
                             menuBtns.unshift(siblings[i]);
                             break;
