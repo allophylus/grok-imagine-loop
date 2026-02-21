@@ -540,7 +540,7 @@ if (window.GrokLoopInjected) {
 
                 if (uploadTrigger) {
                     console.log('Clicking upload trigger to reveal input...');
-                    uploadTrigger.click();
+                    await simulateClick(uploadTrigger);
                     await new Promise(r => setTimeout(r, 500));
                     fileInput = document.querySelector('input[type="file"]');
                 }
@@ -592,7 +592,7 @@ if (window.GrokLoopInjected) {
                 // Heuristic to avoid clicking the wrong "Video" button. The mode toggle is usually a small button or a dropdown.
                 // We'll trust the selector.
                 console.log('Activating Imagine/Video mode...');
-                imagineBtn.click();
+                await simulateClick(imagineBtn);
                 await new Promise(r => setTimeout(r, 1000));
             }
 
@@ -2090,8 +2090,8 @@ if (window.GrokLoopInjected) {
                             });
 
                             if (redoBtn) {
-                                console.log('Clicking Redo/Regenerate button:', debugBtn(redoBtn));
-                                redoBtn.click();
+                                console.log('Clicking Redo/Regenerate button:', redoBtn.innerText || redoBtn.ariaLabel);
+                                await simulateClick(redoBtn);
                             } else {
                                 console.warn('Redo button not found. Falling back to full retry loop.');
                             }
