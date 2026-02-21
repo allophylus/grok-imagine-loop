@@ -4,6 +4,13 @@ A Chrome Utility Extension to automate video generation loops on [Grok.com](http
 
 This tool allows you to create seamless video sequences by automatically using the last frame of a generated video as the input for the next generation, creating a continuous "flow" effect.
 
+## Recent Updates (Release Notes)
+
+**v1.6.5 (Hotfixes)**
+*   **🛠️ Upscale Reliability:** Fixed an issue where the extension failed to find the Upscale button due to Grok UI changes. It now precisely targets the new "Video Settings" SVG menu and ignores history items.
+*   **🚀 Performance Boost:** Added an 800ms debounce buffer when typing in individual Scene Prompts to completely eliminate popup UI freezing/sluggishness.
+*   **💥 Crash Fix:** Resolved the `Message exceeded maximum allowed size of 64MiB` crash. The extension no longer attempts to send massive Base64 image strings across the Chrome IPC bridge when clicking "Start Generation", and instead reads them directly from local storage.
+
 ## Features
 
 *   **🔄 Auto-Looping (Scenes):** Automatically chains video generations. Define how many "Scenes" you want for your story.

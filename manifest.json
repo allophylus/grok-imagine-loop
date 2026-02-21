@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Grok Imagine Loop",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "Automate generating a sequence of videos using Grok's Imagine tool. Includes Auto-extraction, upscaling, and downloading support.",
   "permissions": [
     "activeTab",
