@@ -977,6 +977,16 @@ if (window.GrokLoopInjected) {
                 return false;
             });
 
+            // 1. Force find by the exact SVG classes provided by the user
+            const exactSvgNode = mainContent.querySelector('svg.stroke-\\[2\\].transition-transform');
+            if (exactSvgNode) {
+                const exactBtn = exactSvgNode.closest('button, div[role="button"]');
+                if (exactBtn) {
+                    console.log('[DEBUG] 🎯 Found exact user-provided Video Settings SVG button:', exactBtn);
+                    menuBtns.unshift(exactBtn);
+                }
+            }
+
             // Re-order menus to prioritize the one right next to the submit button (most likely the Video Settings)
             const submitBtn = Array.from(document.querySelectorAll('button')).find(b => {
                 if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
@@ -987,7 +997,7 @@ if (window.GrokLoopInjected) {
             if (submitBtn && submitBtn.previousElementSibling) {
                 const prev = submitBtn.previousElementSibling;
                 if ((prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') && !prev.closest('aside')) {
-                    console.log('Found potential Video Settings dropdown next to Submit button!');
+                    console.log('[DEBUG] Found potential Video Settings dropdown next to Submit button!');
                     // Bring to front
                     menuBtns = menuBtns.filter(m => m !== prev);
                     menuBtns.unshift(prev);
@@ -997,7 +1007,7 @@ if (window.GrokLoopInjected) {
                     for (let i = idx - 1; i >= 0; i--) {
                         const sib = siblings[i];
                         if ((sib.tagName === 'BUTTON' || sib.getAttribute('role') === 'button') && !sib.closest('aside')) {
-                            console.log('Found potential Video Settings dropdown in Submit button container!');
+                            console.log('[DEBUG] Found potential Video Settings dropdown in Submit button container!');
                             menuBtns = menuBtns.filter(m => m !== sib);
                             menuBtns.unshift(sib);
                             break;
@@ -1017,6 +1027,12 @@ if (window.GrokLoopInjected) {
                     }
                 }
             }
+
+            // Deduplicate
+            menuBtns = [...new Set(menuBtns)];
+
+            console.log(`[DEBUG] Total potential menu buttons found: ${menuBtns.length}`);
+            menuBtns.forEach((b, idx) => console.log(`[DEBUG] MenuBtn ${idx}:`, b.outerHTML.substring(0, 150) + '...'));
 
             for (const menuBtn of menuBtns) {
                 console.log('Found potential menu button. Clicking to reveal options...', menuBtn);
