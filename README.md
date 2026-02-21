@@ -19,6 +19,7 @@ This tool allows you to create seamless video sequences by automatically using t
 - **Pause After Video:** Optional "Step Mode" to pause the loop after each generation, allowing for manual review and adjustments.
 *   **⚡ Upscale Support:** Check "Upscale Result" to automatically request the High Quality version of each video.
 *   **📥 Auto-Download:** Automatically saves each generated segment to your Downloads folder.
+*   **🏷️ Custom Filename Prefix:** Set a custom text string to prepend to all auto-downloaded video filenames.
 *   **💾 State Persistence:**
     *   **Input Saving:** Your Prompts, Scene counts, and settings are saved automatically.
     *   **Config Presets:** Save and load multiple "Loops" (Settings + Scenes) for easy reuse.
@@ -68,6 +69,7 @@ This tool allows you to create seamless video sequences by automatically using t
     *   **Timeout:** Max time to wait for generation (default 120s).
     *   **Upscale Result:** Enable to wait for and capture the High Quality version.
     *   **Auto-Download:** Enable to save every video segment automatically.
+    *   **Custom Prefix:** (Under Settings) Set a custom string to prepend to downloaded files.
 4.  **Start:**
     *   Click **Start Generation**.
     *   The "Grok Loop" dashboard will appear on the page.
