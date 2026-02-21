@@ -427,23 +427,27 @@ if (window.GrokLoopInjected) {
     async function simulateClick(element) {
         if (!element) return;
 
+        const mouseOpts = { bubbles: true, cancelable: true, view: window };
+        const pointerOpts = { bubbles: true, cancelable: true, view: window, pointerId: 1, isPrimary: true, button: 0 };
+
         // 1. Move to element (hover)
-        element.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window }));
-        // ... (rest of simulateClick is fine)
-        element.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('mouseover', mouseOpts));
+        element.dispatchEvent(new MouseEvent('mouseenter', mouseOpts));
 
         // Reduced hover time for speed
         await new Promise(r => setTimeout(r, Math.random() * 100 + 50));
 
         // 2. Down
-        element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('mousedown', mouseOpts));
         element.focus();
+        try { element.dispatchEvent(new PointerEvent('pointerdown', pointerOpts)); } catch (e) { }
 
         // Hold time
         await new Promise(r => setTimeout(r, Math.random() * 50 + 20));
 
         // 3. Up & Click
-        element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
+        try { element.dispatchEvent(new PointerEvent('pointerup', pointerOpts)); } catch (e) { }
         element.click();
     }
 
@@ -1052,18 +1056,6 @@ if (window.GrokLoopInjected) {
                     // Attempt 2: Native Click + Force
                     moreBtn.focus();
                     moreBtn.click();
-
-                    // Comprehensive Event Sequence for Firefox/Radix
-                    const evOpts = { bubbles: true, cancelable: true, view: window };
-                    moreBtn.dispatchEvent(new MouseEvent('mousedown', evOpts));
-                    moreBtn.dispatchEvent(new MouseEvent('mouseup', evOpts));
-
-                    const pointerOpts = { bubbles: true, cancelable: true, view: window, pointerId: 1, isPrimary: true, button: 0 };
-                    try {
-                        moreBtn.dispatchEvent(new PointerEvent('pointerdown', pointerOpts));
-                        moreBtn.dispatchEvent(new PointerEvent('pointerup', pointerOpts));
-                    } catch (e) { /* Firefox might throw on PointerEvent instantiation in some contexts */ }
-
                     await new Promise(r => setTimeout(r, 1000));
                 }
 
