@@ -156,6 +156,15 @@
 
     <div class="row">
       <div class="col input-group">
+        <label for="filenamePrefix"
+          title="Optional custom prefix to prepend to all downloaded video filenames (e.g., 'MyProject_Scene').">Filename
+          Prefix</label>
+        <input type="text" id="filenamePrefix" placeholder="e.g. MyProject_" title="Prepends to grok_video_segment_X.mp4">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col input-group">
         <label for="timeout"
           title="Maximum time (in seconds) to wait for a video status to change from 'working' to 'done' or 'error'.">Timeout
           (s)</label>

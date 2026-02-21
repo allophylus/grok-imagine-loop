@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pauseAfterSceneInput = document.getElementById('pauseAfterScene');
     const upscaleInput = document.getElementById('upscale');
     const resetInputsBtn = document.getElementById('resetInputsBtn');
+    const filenamePrefixInput = document.getElementById('filenamePrefix');
     const statusDiv = document.getElementById('status');
     const versionSpan = document.getElementById('version');
 
@@ -208,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     pauseOnModeration: pauseOnModerationInput.checked,
                     pauseAfterScene: pauseAfterSceneInput.checked,
                     birthYear: birthYearInput.value,
-                    globalPrompt: globalPromptInput.value
+                    globalPrompt: globalPromptInput.value,
+                    filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
                 },
                 scenes: scenes.map(s => ({
                     prompt: s.prompt,
@@ -562,6 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 continueOnFailure: continueOnFailureInput.checked,
                 pauseOnModeration: pauseOnModerationInput.checked,
                 showDashboard: showDashboardInput.checked,
+                filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
                 // Also save global image if present?
                 // For now, let's keep it simple. Local file blobs are large.
                 // We'll trust scenes.image logic (dataURL) but global initial image logic is separate.
@@ -601,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.settings.moderationRetryLimit) moderationRetryLimitInput.value = data.settings.moderationRetryLimit;
                 if (data.settings.birthYear) birthYearInput.value = data.settings.birthYear;
                 if (data.settings.globalPrompt) globalPromptInput.value = data.settings.globalPrompt;
+                if (data.settings.filenamePrefix !== undefined && filenamePrefixInput) filenamePrefixInput.value = data.settings.filenamePrefix;
 
                 upscaleInput.checked = !!data.settings.upscale;
                 autoDownloadInput.checked = !!data.settings.autoDownload;
@@ -669,7 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showDashboard: showDashboardInput.checked,
             showDebugLogs: showDebugLogsInput.checked,
             birthYear: birthYearInput.value,
-            globalPrompt: globalPromptInput.value
+            globalPrompt: globalPromptInput.value,
+            filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
         };
         chrome.storage.local.set({ 'grokLoopConfig': config });
     }
@@ -705,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach Config Listeners
     // const pauseOnErrorInput = document.getElementById('pauseOnError'); // Moved to top
-    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
+    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, filenamePrefixInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
         if (el) {
             el.addEventListener('input', saveConfigs);
             el.addEventListener('change', saveConfigs);
@@ -779,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (c.birthYear) birthYearInput.value = c.birthYear;
             if (c.globalPrompt) globalPromptInput.value = c.globalPrompt;
+            if (c.filenamePrefix !== undefined && filenamePrefixInput) filenamePrefixInput.value = c.filenamePrefix;
 
             updateInitialImageLabel(); // Sync label on load
             if (c.birthYear) birthYearInput.value = c.birthYear;

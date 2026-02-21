@@ -2167,7 +2167,8 @@ if (window.GrokLoopInjected) {
         downloadSegment(index) {
             const seg = state.segments[index];
             if (seg.videoUrl) {
-                const filename = `grok_loop_segment_${index + 1}.mp4`;
+                let prefix = state.config.filenamePrefix ? state.config.filenamePrefix.trim() : '';
+                const filename = `${prefix}grok_loop_segment_${index + 1}.mp4`;
 
                 // For Blob URLs, Background script downloads randomly strip filenames and use UUIDs.
                 // Doing it via an anchor tag in the content script preserves the filename perfectly.
