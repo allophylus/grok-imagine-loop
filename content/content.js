@@ -908,20 +908,21 @@ if (window.GrokLoopInjected) {
 
         // Helper to find button/menuitem by translations
         const findLocalizedBtn = (translationKeys, scope = document) => {
-            const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"]'));
+            const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"], div[role="option"], li, a'));
             return elements.find(el => {
                 // Ignore navigation elements
                 if (el.closest('nav') || el.closest('[role="navigation"]')) return false;
+
+                // Ignore invisible elements
+                if (el.offsetParent === null) return false;
 
                 const svgTitle = el.querySelector('svg title')?.textContent || '';
                 const content = (el.innerText || el.ariaLabel || el.title || el.textContent || svgTitle).toLowerCase();
 
                 // Explicitly EXCLUDE the Imagine/Video toggle button
                 if (TRANSLATIONS.imagineMode.some(k => content === k || content.includes(k))) {
-                    // Check if it's likely the main mode toggle (usually just says "Video" or "Imagine" without other text like "Make Video")
-                    // A safer heuristic: If the button is active and we are trying to upscale, it shouldn't be the mode toggle.
                     const isActive = el.classList.contains('active') || el.getAttribute('aria-selected') === 'true';
-                    if (isActive || content.trim().length < 15) { // Mode toggles usually have very short text
+                    if (isActive || content.trim().length < 15) {
                         return false;
                     }
                 }
@@ -940,150 +941,83 @@ if (window.GrokLoopInjected) {
             });
         };
 
-        // NEW STRATEGY: Structural DOM Proximity
-        // 1. Find the universal "More" button (...) first
-        let moreBtn = Array.from(mainContent.querySelectorAll('button')).find(b => {
-            if (b.closest('nav') || b.closest('[role="navigation"]')) return false;
-
-            // Check for text "..."
-            const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
-            if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
-
-            // Check for SVG structure (3 dots = 3 circles or a path drawing 3 dots)
-            const svgs = b.querySelectorAll('svg');
-            if (svgs.length > 0) {
-                for (let svg of svgs) {
-                    const title = (svg.querySelector('title')?.textContent || '').toLowerCase();
-                    if (TRANSLATIONS.more.some(k => title.includes(k))) return true;
-
-                    // Heuristic: Does the SVG have exactly 3 circles? (Standard "... " icon)
-                    const circles = svg.querySelectorAll('circle');
-                    if (circles.length === 3) return true;
-                }
-            }
-            return false;
-        });
-
         let upscaleBtn = null;
 
-        if (moreBtn) {
-            console.log('Found "More (...)" button for structural reference.');
-            // 2. The Upscale button is typically the immediate previous sibling in the toolbar
-            const prevSibling = moreBtn.previousElementSibling;
-
-            // Verify the sibling is a button or has SVG
-            if (prevSibling && (prevSibling.tagName === 'BUTTON' || prevSibling.querySelector('svg'))) {
-                console.log('Found Upscale button via structural proximity (previous sibling)!');
-                upscaleBtn = prevSibling;
-            } else {
-                console.log('Previous sibling is not a button. Checking container...');
-                // Fallback structual: get all buttons in the container and take the one before `moreBtn`
-                const container = moreBtn.parentElement;
-                if (container) {
-                    const siblings = Array.from(container.querySelectorAll('button'));
-                    const moreIndex = siblings.indexOf(moreBtn);
-                    if (moreIndex > 0) {
-                        upscaleBtn = siblings[moreIndex - 1];
-                        console.log('Found Upscale button via sibling index!');
-                    }
-                }
-            }
-        }
-
-        // 3. Fallback: Try finding 'Upscale' directly via translations if structural check failed
-        if (!upscaleBtn || upscaleBtn.disabled) {
-            console.log('Structural Upscale search failed. Falling back to localized translations...');
-            upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
-        }
+        // 1. Try finding 'Upscale' directly via translations (maybe it's already visible)
+        console.log('Searching for Upscale button directly...');
+        upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
 
         if (!upscaleBtn) {
-            console.log('Upscale button not found directly. Checking "More" menu...');
+            console.log('Upscale button not found directly. Checking menus...');
 
-            // If we didn't find the moreBtn earlier, try other strategies to find it
-            if (!moreBtn) {
-                console.log('Strategy C failed. Trying Strategy B (Proximity to Edit)...');
-                const editBtn = findLocalizedBtn(TRANSLATIONS.edit, mainContent);
+            // Find the universal "More" button (...) or settings button
+            let menuBtns = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).filter(b => {
+                if (b.closest('nav') || b.closest('[role="navigation"]')) return false;
 
-                if (editBtn) {
-                    const container = editBtn.parentElement;
-                    if (container) {
-                        const siblings = Array.from(container.querySelectorAll('button'));
-                        const lastBtn = siblings[siblings.length - 1];
-                        if (lastBtn && lastBtn !== editBtn) {
-                            console.log('Found potential "More" button via proximity (last sibling).');
-                            moreBtn = lastBtn;
-                        }
+                const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
+                if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
+
+                // Also check for SVG with 3 dots or gear/settings icon
+                const svgs = b.querySelectorAll('svg');
+                if (svgs.length > 0) {
+                    for (let svg of svgs) {
+                        const title = (svg.querySelector('title')?.textContent || '').toLowerCase();
+                        if (TRANSLATIONS.more.some(k => title.includes(k))) return true;
+
+                        // Heuristic: Does the SVG have exactly 3 circles?
+                        const circles = svg.querySelectorAll('circle');
+                        if (circles.length === 3) return true;
+                    }
+                }
+                return false;
+            });
+
+            // Additionally try to find by proximity to Edit/Redo if standard more button fails
+            if (menuBtns.length === 0) {
+                const actionBtn = findLocalizedBtn(TRANSLATIONS.regenerate, mainContent) || findLocalizedBtn(TRANSLATIONS.edit, mainContent);
+                if (actionBtn && actionBtn.parentElement) {
+                    const siblings = Array.from(actionBtn.parentElement.querySelectorAll('button'));
+                    const lastBtn = siblings[siblings.length - 1];
+                    if (lastBtn && lastBtn !== actionBtn) {
+                        menuBtns.push(lastBtn);
                     }
                 }
             }
 
-            // Strategy D: Proximity to "Redo" or "Retry" (if Edit not found)
-            if (!moreBtn) {
-                console.log('Strategy B failed. Trying Strategy D (Proximity to Redo)...');
-                const actionBtn = findLocalizedBtn(TRANSLATIONS.regenerate, mainContent);
+            for (const menuBtn of menuBtns) {
+                console.log('Found potential menu button. Clicking to reveal options...', menuBtn);
 
-                if (actionBtn) {
-                    const container = actionBtn.parentElement;
-                    if (container) {
-                        const siblings = Array.from(container.querySelectorAll('button'));
-                        const lastBtn = siblings[siblings.length - 1];
-                        if (lastBtn && lastBtn !== actionBtn) {
-                            console.log('Found potential "More" button via Redo/Retry proximity.');
-                            moreBtn = lastBtn;
-                        }
-                    }
-                }
-            }
-
-            // Strategy A: Localized terms (Fallback - Last Resort, mainly for English "More" if icon is missing)
-            if (!moreBtn) {
-                console.log('Strategy D failed. Trying Strategy A (Localized Text)...');
-                moreBtn = findLocalizedBtn(TRANSLATIONS.more, mainContent);
-            }
-
-            if (moreBtn) {
-                console.log('Found "More" menu button. Clicking...', moreBtn);
-
-                // Attempt 1: Standard Click
-                await simulateClick(moreBtn);
+                await simulateClick(menuBtn);
                 await new Promise(r => setTimeout(r, 1000));
 
-                // Verify if menu opened (Radix uses aria-expanded or data-state)
-                let isOpen = moreBtn.getAttribute('aria-expanded') === 'true' || moreBtn.getAttribute('data-state') === 'open';
-
+                let isOpen = menuBtn.getAttribute('aria-expanded') === 'true' || menuBtn.getAttribute('data-state') === 'open';
                 if (!isOpen) {
-                    console.log('Menu did not open. Retrying with native click() and Pointer events...');
-                    // Attempt 2: Native Click + Force
-                    moreBtn.focus();
-                    moreBtn.click();
+                    menuBtn.focus();
+                    menuBtn.click();
                     await new Promise(r => setTimeout(r, 1000));
                 }
 
-                await new Promise(r => setTimeout(r, 1000)); // Extra settle time
+                await new Promise(r => setTimeout(r, 1000));
 
-                // 3. Search for Upscale again inside the new menu (Global Scope for Portals)
                 upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, document);
-            } else {
-                console.warn('Could not find "More" button via any strategy.');
+                if (upscaleBtn) {
+                    console.log('Found Upscale button inside menu!');
+                    break;
+                } else {
+                    // Click again to close before trying the next one
+                    await simulateClick(menuBtn);
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
 
+            if (!upscaleBtn) {
+                console.warn('Could not find Upscale button via any menu strategy.');
                 // DIAGNOSTIC DUMP
                 console.log('%c --- DIAGNOSTIC DUMP ---', 'color: cyan; font-weight: bold;');
                 const likelyToolbar = document.querySelector('button')?.parentElement;
                 if (likelyToolbar) {
                     console.log('Sample Toolbar HTML:', likelyToolbar.innerHTML);
                 }
-                const allButtons = Array.from(document.querySelectorAll('button'));
-                console.log('All Buttons:', allButtons.map(b => {
-                    const label = (b.ariaLabel || b.title || b.innerText || '').toLowerCase();
-                    const isUpload = typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS.upload && TRANSLATIONS.upload.some(k => label.includes(k));
-
-                    return {
-                        text: b.innerText,
-                        aria: b.ariaLabel,
-                        svg: b.querySelector('svg') ? 'Has SVG' : 'No SVG',
-                        isUpload: isUpload
-                    };
-                }));
             }
         }
 
@@ -1514,6 +1448,21 @@ if (window.GrokLoopInjected) {
             console.log('LoopManager starting...', payload);
             if (state.isRunning) return;
 
+            // Fetch images from storage since they are no longer in payload due to 64MiB limit
+            let storedScenes = [];
+            let storedGlobalImageUrl = null;
+            try {
+                const result = await chrome.storage.local.get(['grokLoopScenes', 'grokLoopImage']);
+                storedScenes = result.grokLoopScenes || [];
+                if (result.grokLoopImage) {
+                    storedGlobalImageUrl = typeof result.grokLoopImage === 'string'
+                        ? result.grokLoopImage
+                        : result.grokLoopImage.dataUrl;
+                }
+            } catch (err) {
+                console.error('Error fetching images from storage', err);
+            }
+
             state.config = {
                 ...state.config, // Preserve existing (like storage loaded debug flags)
                 timeout: (payload.timeout || 30) * 1000,
@@ -1526,17 +1475,23 @@ if (window.GrokLoopInjected) {
                 showDebugLogs: payload.showDebugLogs !== undefined ? payload.showDebugLogs : state.config.showDebugLogs,
                 showDashboard: payload.showDashboard !== undefined ? payload.showDashboard : state.config.showDashboard,
                 moderationRetryLimit: payload.moderationRetryLimit || 2,
-                initialImage: payload.initialImage ? dataURItoBlob(payload.initialImage) : null
+                initialImage: payload.hasInitialImage && storedGlobalImageUrl ? dataURItoBlob(storedGlobalImageUrl) : (payload.initialImage ? dataURItoBlob(payload.initialImage) : null)
             };
 
             // Map Payload scenes to Segments (Convert DataURLs to Blobs)
-            state.segments = payload.scenes ? payload.scenes.map((s, i) => ({
-                id: i,
-                prompt: s.prompt,
-                inputImage: s.inputImage ? dataURItoBlob(s.inputImage) : null,
-                videoUrl: null,
-                status: 'pending'
-            })) : payload.prompts.map((p, i) => ({ // Fallback for legacy calls
+            state.segments = payload.scenes ? payload.scenes.map((s, i) => {
+                let imgDataUrl = s.inputImage || null; // Fallback if older payload format sent it
+                if (s.hasImage && !imgDataUrl && storedScenes[i] && storedScenes[i].image) {
+                    imgDataUrl = storedScenes[i].image.dataUrl;
+                }
+                return {
+                    id: i,
+                    prompt: s.prompt,
+                    inputImage: imgDataUrl ? dataURItoBlob(imgDataUrl) : null,
+                    videoUrl: null,
+                    status: 'pending'
+                };
+            }) : payload.prompts.map((p, i) => ({ // Fallback for legacy calls
                 id: i,
                 prompt: p,
                 inputImage: null,
@@ -1605,7 +1560,7 @@ if (window.GrokLoopInjected) {
             chrome.storage.local.set({ 'grokLoopState': savePayload });
         },
 
-        togglePause(shouldResume, resumePayload) {
+        async togglePause(shouldResume, resumePayload) {
             // Default to toggle if no argument provided (e.g. from UI button)
             if (shouldResume === undefined) shouldResume = !state.isRunning;
 
@@ -1618,18 +1573,33 @@ if (window.GrokLoopInjected) {
                 if (resumePayload && resumePayload.scenes) {
                     console.log('Merging updated scenes from Resume payload...');
 
+                    let storedScenes = [];
+                    try {
+                        const result = await chrome.storage.local.get(['grokLoopScenes']);
+                        storedScenes = result.grokLoopScenes || [];
+                    } catch (err) {
+                        console.error('Error fetching images for resume', err);
+                    }
+
                     // 1. Update Existing Segments
                     resumePayload.scenes.forEach((updatedScene, i) => {
+                        let imgDataUrl = null;
+                        if (updatedScene.hasImage && storedScenes[i] && storedScenes[i].image) {
+                            imgDataUrl = storedScenes[i].image.dataUrl;
+                        } else if (updatedScene.inputImage) {
+                            imgDataUrl = updatedScene.inputImage; // Fallback legacy
+                        }
+
                         // If this is an existing segment
                         if (i < state.segments.length) {
                             // Only update future or current segments. Don't touch history.
                             if (i >= state.currentSegmentIndex && state.currentSegmentIndex !== -1) {
                                 state.segments[i].prompt = updatedScene.prompt;
-                                if (updatedScene.inputImage !== undefined) {
-                                    if (typeof updatedScene.inputImage === 'string' && updatedScene.inputImage.startsWith('data:')) {
-                                        state.segments[i].inputImage = dataURItoBlob(updatedScene.inputImage);
+                                if (updatedScene.hasImage !== undefined || updatedScene.inputImage !== undefined) {
+                                    if (typeof imgDataUrl === 'string' && imgDataUrl.startsWith('data:')) {
+                                        state.segments[i].inputImage = dataURItoBlob(imgDataUrl);
                                     } else {
-                                        state.segments[i].inputImage = updatedScene.inputImage;
+                                        state.segments[i].inputImage = imgDataUrl;
                                     }
                                 }
                             }
@@ -1639,7 +1609,7 @@ if (window.GrokLoopInjected) {
                             const newSeg = {
                                 id: i,
                                 prompt: updatedScene.prompt,
-                                inputImage: updatedScene.inputImage ? (typeof updatedScene.inputImage === 'string' && updatedScene.inputImage.startsWith('data:') ? dataURItoBlob(updatedScene.inputImage) : updatedScene.inputImage) : null,
+                                inputImage: imgDataUrl ? (typeof imgDataUrl === 'string' && imgDataUrl.startsWith('data:') ? dataURItoBlob(imgDataUrl) : imgDataUrl) : null,
                                 videoUrl: null,
                                 status: 'pending'
                             };

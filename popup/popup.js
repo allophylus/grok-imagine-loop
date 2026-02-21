@@ -1018,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         payload: {
                             scenes: validScenes.map(s => ({
                                 prompt: s.prompt,
-                                inputImage: s.image ? s.image.dataUrl : null
+                                hasImage: !!s.image
                             }))
                         }
                     });
@@ -1077,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // NEW Payload Structure
                 scenes: validScenes.map(s => ({
                     prompt: s.prompt,
-                    inputImage: s.image ? s.image.dataUrl : null
+                    hasImage: !!s.image
                 })),
 
                 // Legacy Backwards Compat
@@ -1085,10 +1085,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 initialImage: null
             };
 
-            // Pass global Initial Image if loaded
+            // Pass global Initial Image flag if loaded
             const previewEl = document.getElementById('restoredImagePreview');
             if (previewEl && previewEl.src && previewEl.style.display !== 'none') {
-                payload.initialImage = previewEl.src;
+                payload.hasInitialImage = true;
             }
 
             statusDiv.innerText = 'Sending command...';
