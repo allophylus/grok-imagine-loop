@@ -912,6 +912,16 @@ if (window.GrokLoopInjected) {
                 const svgTitle = el.querySelector('svg title')?.textContent || '';
                 const content = (el.innerText || el.ariaLabel || el.title || el.textContent || svgTitle).toLowerCase();
 
+                // Explicitly EXCLUDE the Imagine/Video toggle button
+                if (TRANSLATIONS.imagineMode.some(k => content === k || content.includes(k))) {
+                    // Check if it's likely the main mode toggle (usually just says "Video" or "Imagine" without other text like "Make Video")
+                    // A safer heuristic: If the button is active and we are trying to upscale, it shouldn't be the mode toggle.
+                    const isActive = el.classList.contains('active') || el.getAttribute('aria-selected') === 'true';
+                    if (isActive || content.trim().length < 15) { // Mode toggles usually have very short text
+                        return false;
+                    }
+                }
+
                 const match = translationKeys.find(k => {
                     // special handling for short keywords like "hd" to require word boundaries
                     if (k === 'hd') return content === 'hd' || content.includes(' hd') || content.includes('hd ') || content.includes(' hd ') || content.includes('[hd');
