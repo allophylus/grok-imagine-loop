@@ -1,5 +1,9 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.4
+- **Feature:** **Custom Filename Prefix**. Added a new configuration option in the Settings tab to let you prepend a custom text string to all auto-downloaded video filenames (e.g., `MyProject_Scene_`).
+- **Fix:** **Firefox Radix Menu Interactions**. Significantly overhauled the simulated click engine to fully support native `PointerEvents`. This ensures buttons like "Regenerate," "Upscale," and "Send" interact consistently and reliably in stricter browsers like Firefox.
+
 ## v1.6.3
 - **Feature:** **Full Multi-Language Support**. The extension now works natively across all supported Grok languages without relying on hardcoded English text.
 - **Fix:** **Structural Button Detection**. Upscale buttons are now identified visually (via the `...` menu) instead of relying on keywords, fixing upscale detection across all languages.
