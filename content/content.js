@@ -2164,10 +2164,19 @@ if (window.GrokLoopInjected) {
             await this.processQueue();
         },
 
-        downloadSegment(index) {
+        async downloadSegment(index) {
             const seg = state.segments[index];
             if (seg.videoUrl) {
-                let prefix = state.config.filenamePrefix ? state.config.filenamePrefix.trim() : '';
+                // Fetch the absolute latest prefix from storage right before downloading
+                // in case the user changed it in the popup while generating.
+                const stored = await chrome.storage.local.get('grokLoopConfig');
+                let userPrefix = '';
+                if (stored.grokLoopConfig && stored.grokLoopConfig.filenamePrefix) {
+                    userPrefix = stored.grokLoopConfig.filenamePrefix.trim();
+                }
+
+                // If undefined or empty in storage, fallback to in-memory config prefix, or empty
+                let prefix = userPrefix || (state.config.filenamePrefix ? state.config.filenamePrefix.trim() : '');
                 const filename = `${prefix}grok_loop_segment_${index + 1}.mp4`;
 
                 // For Blob URLs, Background script downloads randomly strip filenames and use UUIDs.
