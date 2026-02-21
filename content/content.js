@@ -950,7 +950,8 @@ if (window.GrokLoopInjected) {
         if (!upscaleBtn) {
             console.log('Upscale button not found directly. Checking menus...');
 
-            // Find the universal "More" button (...) or settings button
+            // NEW HEURISTIC: Find the specific "Video Settings" button with the ... SVG or text
+            // The user provided the HTML for the exact new button: it contains a specific SVG or the literal characters "..."
             let menuBtns = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).filter(b => {
                 // EXPLICITLY ignore anything in the sidebar/history area
                 if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
@@ -958,12 +959,15 @@ if (window.GrokLoopInjected) {
                 const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
                 if (text.includes('...') || text.includes('…') || TRANSLATIONS.more.some(k => text.includes(k))) return true;
 
-                // Also check for SVG with 3 dots or gear/settings icon
+                // Also check for SVG with 3 dots, gear/settings icon, or EXACT attributes provided by user
                 const svgs = b.querySelectorAll('svg');
                 if (svgs.length > 0) {
                     for (let svg of svgs) {
                         const title = (svg.querySelector('title')?.textContent || '').toLowerCase();
                         if (TRANSLATIONS.more.some(k => title.includes(k))) return true;
+
+                        // Check for user-provided specific "More" SVG
+                        if (svg.classList.contains('stroke-[2]') && svg.classList.contains('transition-transform')) return true;
 
                         // Heuristic: Does the SVG have exactly 3 circles?
                         const circles = svg.querySelectorAll('circle');
@@ -973,28 +977,29 @@ if (window.GrokLoopInjected) {
                 return false;
             });
 
-            // NEW HEURISTIC: "Video settings button next to the up arrow" 
-            // Often, it's the direct previous sibling to the submit button in the input row.
+            // Re-order menus to prioritize the one right next to the submit button (most likely the Video Settings)
             const submitBtn = Array.from(document.querySelectorAll('button')).find(b => {
                 if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
                 const aria = (b.ariaLabel || b.title || '').toLowerCase();
-                return aria.includes('submit') || aria.includes('send') || (b.type === 'submit') || b.querySelector('path[d*="M2 21v-5"]'); // Random heuristical shapes for send arrow
+                return aria.includes('submit') || aria.includes('send') || (b.type === 'submit') || b.querySelector('path[d*="M2 21v-5"]');
             }) || document.querySelector('button[type="submit"]');
 
             if (submitBtn && submitBtn.previousElementSibling) {
-                // If the previous element is a button or has role button, it's highly likely the Video Mode/Settings dropdown
                 const prev = submitBtn.previousElementSibling;
                 if ((prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') && !prev.closest('aside')) {
                     console.log('Found potential Video Settings dropdown next to Submit button!');
-                    menuBtns.unshift(prev); // Prioritize this one based on recent UI changes!
+                    // Bring to front
+                    menuBtns = menuBtns.filter(m => m !== prev);
+                    menuBtns.unshift(prev);
                 } else if (submitBtn.parentElement) {
-                    // Sometimes there's a wrapper, search siblings backwards
                     const siblings = Array.from(submitBtn.parentElement.children);
                     const idx = siblings.indexOf(submitBtn);
                     for (let i = idx - 1; i >= 0; i--) {
-                        if ((siblings[i].tagName === 'BUTTON' || siblings[i].getAttribute('role') === 'button') && !siblings[i].closest('aside')) {
+                        const sib = siblings[i];
+                        if ((sib.tagName === 'BUTTON' || sib.getAttribute('role') === 'button') && !sib.closest('aside')) {
                             console.log('Found potential Video Settings dropdown in Submit button container!');
-                            menuBtns.unshift(siblings[i]);
+                            menuBtns = menuBtns.filter(m => m !== sib);
+                            menuBtns.unshift(sib);
                             break;
                         }
                     }
