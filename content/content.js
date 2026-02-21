@@ -240,8 +240,7 @@ if (window.GrokLoopInjected) {
             '達到速率限制', '超過限制', // Chinese (Traditional)
             'レート制限', '上限に達しました', // Japanese
             'превышен лимит', 'слишком много запросов', // Russian
-            'limite de taxa', 'demasiadas solicitações', // Portuguese
-            'rate limit', 'limit' // Generic fallbacks
+            'limite de taxa', 'demasiadas solicitações' // Portuguese
         ],
         imagineMode: [
             'imagine', 'video', 'vídeo', 'vidéo', 'визуализировать', 'ভিডিও', 'വീഡിയോ', 'vidéo',
@@ -1080,6 +1079,26 @@ if (window.GrokLoopInjected) {
                 const likelyToolbar = document.querySelector('button')?.parentElement;
                 if (likelyToolbar) {
                     console.log('Sample Toolbar HTML:', likelyToolbar.innerHTML);
+                }
+
+                console.warn('Attempting pure legacy fallback for Upscale button...');
+                // LEGACY FALLBACK: Just find any button with the word "Upscale" or "Enhance" anywhere on the screen
+                const allButtons = Array.from(document.querySelectorAll('button, div[role="button"], div[role="menuitem"], a'));
+                upscaleBtn = allButtons.find(b => {
+                    const content = (b.innerText || b.ariaLabel || b.textContent || '').toLowerCase();
+                    // Basic visible check
+                    if (b.offsetWidth === 0 && b.offsetHeight === 0) return false;
+                    // Exclude sidebar history
+                    if (b.closest('aside') || b.closest('[class*="history" i]')) return false;
+
+                    return TRANSLATIONS.upscale.some(k => {
+                        if (k === 'hd') return content === 'hd' || content.includes(' hd ');
+                        return content.includes(k);
+                    }) && !b.disabled;
+                });
+
+                if (upscaleBtn) {
+                    console.log('Found Upscale button via pure legacy fallback!', upscaleBtn);
                 }
             }
         }

@@ -4,6 +4,8 @@
 - **Fix:** **Upscale Reliability**. Fixed an issue where the extension failed to find the Upscale button due to Grok UI changes. It now precisely targets the new "Video Settings" SVG menu and ignores history items.
 - **Improvement:** **Performance Boost**. Added an 800ms debounce buffer when typing in individual Scene Prompts to completely eliminate popup UI freezing/sluggishness.
 - **Fix:** **Crash Fix**. Resolved the `Message exceeded maximum allowed size of 64MiB` crash. The extension no longer attempts to send massive Base64 image strings across the Chrome IPC bridge when clicking "Start Generation", and instead reads them directly from local storage.
+- **Fix:** **Rate Limit Detection**. Removed overly broad fallback text scanning that caused the extension to falsely detect a "Rate Limit Reached" error and abort waiting for a video.
+- **Improvement:** **Upscale Reliability**. Added a pure legacy fallback method that sweeps the entire screen for upscale buttons if the exact SVG targeting fails.
 ## v1.6.4
 - **Feature:** **Custom Filename Prefix**. Added a new configuration option in the Settings tab to let you prepend a custom text string to all auto-downloaded video filenames (e.g., `MyProject_Scene_`).
 - **Fix:** **Firefox Radix Menu Interactions**. Significantly overhauled the simulated click engine to fully support native `PointerEvents`. This ensures buttons like "Regenerate," "Upscale," and "Send" interact consistently and reliably in stricter browsers like Firefox.
