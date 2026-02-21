@@ -908,6 +908,7 @@ if (window.GrokLoopInjected) {
 
         // Helper to find button/menuitem by translations
         const findLocalizedBtn = (translationKeys, scope = document) => {
+            if (!scope) return null;
             const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"], div[role="option"], li, a'));
             return elements.find(el => {
                 // Ignore navigation elements and sidebars
@@ -917,12 +918,16 @@ if (window.GrokLoopInjected) {
                 if (el.offsetParent === null) return false;
 
                 const svgTitle = el.querySelector('svg title')?.textContent || '';
-                const content = (el.innerText || el.ariaLabel || el.title || el.textContent || svgTitle).toLowerCase();
+                const baseContent = (el.innerText || el.ariaLabel || el.title || el.textContent || svgTitle).trim();
+                const content = baseContent.toLowerCase();
+
+                // If the text is extremely long, it's probably a prompt/chat message, not a UI button.
+                if (baseContent.length > 40) return false;
 
                 // Explicitly EXCLUDE the Imagine/Video toggle button
                 if (TRANSLATIONS.imagineMode.some(k => content === k || content.includes(k))) {
                     const isActive = el.classList.contains('active') || el.getAttribute('aria-selected') === 'true';
-                    if (isActive || content.trim().length < 15) {
+                    if (isActive || content.length < 15) {
                         return false;
                     }
                 }
@@ -977,14 +982,17 @@ if (window.GrokLoopInjected) {
                 return false;
             });
 
-            // 1. Force find by the exact SVG classes provided by the user
-            const exactSvgNode = mainContent.querySelector('svg.stroke-\\[2\\].transition-transform');
-            if (exactSvgNode) {
-                const exactBtn = exactSvgNode.closest('button, div[role="button"]');
-                if (exactBtn) {
-                    console.log('[DEBUG] 🎯 Found exact user-provided Video Settings SVG button:', exactBtn);
-                    menuBtns.unshift(exactBtn);
+            // 1. Force find by the exact SVG classes provided by the user (Bypassing querySelector escaping)
+            let exactBtn = null;
+            for (const svg of document.querySelectorAll('svg')) {
+                if (svg.classList.contains('stroke-[2]') && svg.classList.contains('transition-transform')) {
+                    exactBtn = svg.closest('button, div[role="button"]');
+                    if (exactBtn && !exactBtn.closest('aside')) break;
                 }
+            }
+            if (exactBtn) {
+                console.log('[DEBUG] 🎯 Found exact user-provided Video Settings SVG button:', exactBtn);
+                menuBtns.unshift(exactBtn);
             }
 
             // Re-order menus to prioritize the one right next to the submit button (most likely the Video Settings)
@@ -994,24 +1002,14 @@ if (window.GrokLoopInjected) {
                 return aria.includes('submit') || aria.includes('send') || (b.type === 'submit') || b.querySelector('path[d*="M2 21v-5"]');
             }) || document.querySelector('button[type="submit"]');
 
-            if (submitBtn && submitBtn.previousElementSibling) {
-                const prev = submitBtn.previousElementSibling;
-                if ((prev.tagName === 'BUTTON' || prev.getAttribute('role') === 'button') && !prev.closest('aside')) {
-                    console.log('[DEBUG] Found potential Video Settings dropdown next to Submit button!');
-                    // Bring to front
-                    menuBtns = menuBtns.filter(m => m !== prev);
-                    menuBtns.unshift(prev);
-                } else if (submitBtn.parentElement) {
-                    const siblings = Array.from(submitBtn.parentElement.children);
-                    const idx = siblings.indexOf(submitBtn);
-                    for (let i = idx - 1; i >= 0; i--) {
-                        const sib = siblings[i];
-                        if ((sib.tagName === 'BUTTON' || sib.getAttribute('role') === 'button') && !sib.closest('aside')) {
-                            console.log('[DEBUG] Found potential Video Settings dropdown in Submit button container!');
-                            menuBtns = menuBtns.filter(m => m !== sib);
-                            menuBtns.unshift(sib);
-                            break;
-                        }
+            if (submitBtn && submitBtn.parentElement) {
+                // Look for any button in the same container as the submit button
+                const siblings = Array.from(submitBtn.parentElement.querySelectorAll('button, div[role="button"]'));
+                for (const sib of siblings) {
+                    if (sib !== submitBtn && !sib.closest('aside')) {
+                        console.log('[DEBUG] Found potential Video Settings dropdown near Submit button!');
+                        menuBtns = menuBtns.filter(m => m !== sib);
+                        menuBtns.unshift(sib);
                     }
                 }
             }
@@ -1049,7 +1047,22 @@ if (window.GrokLoopInjected) {
 
                 await new Promise(r => setTimeout(r, 1000));
 
-                upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, document);
+                // ONLY search within the opened menu/popover (not the whole document)
+                let openMenuContainers = Array.from(document.querySelectorAll('[role="menu"], [role="dialog"], [data-radix-popper-content-wrapper], [data-state="open"]')).filter(el => el.tagName !== 'BUTTON');
+                const controlledId = menuBtn.getAttribute('aria-controls');
+                if (controlledId) {
+                    const controlledEl = document.getElementById(controlledId);
+                    if (controlledEl) openMenuContainers.push(controlledEl);
+                }
+
+                // Remove duplicates and search
+                openMenuContainers = [...new Set(openMenuContainers)];
+
+                for (const container of openMenuContainers) {
+                    upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, container);
+                    if (upscaleBtn) break;
+                }
+
                 if (upscaleBtn) {
                     console.log('Found Upscale button inside menu!');
                     break;
