@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Grok Imagine Loop",
-  "version": "1.6.5",
-  "description": "Automate generating a sequence of videos using Grok's Imagine tool. Includes Auto-extraction, upscaling, and downloading support.",
+  "name": "Grok Auto Của Giang",
+  "version": "1.6.5-giang",
+  "description": "Auto video KOL AI free 100% - Phiên bản riêng của GiangWillRich 😏",
   "permissions": [
     "activeTab",
     "storage",
@@ -22,7 +22,7 @@
     "https://assets.grokusercontent.com/*"
   ],
   "action": {
-    "default_title": "Open Grok Loop",
+    "default_title": "Grok Auto Của Giang",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
