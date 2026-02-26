@@ -575,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 autoDownload: autoDownloadInput.checked,
                 autoSkip: autoSkipInput.checked,
                 reuseInitialImage: reuseInitialImageInput.checked,
-                continueOnFailure: continueOnFailureInput.checked,
+                continueOnFailure: !pauseOnErrorInput.checked,
                 pauseOnModeration: pauseOnModerationInput.checked,
                 showDashboard: showDashboardInput.checked,
                 filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
