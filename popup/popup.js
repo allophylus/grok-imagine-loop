@@ -140,11 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const debugLogViewer = document.getElementById('debugLogViewer');
 
     // Saved Configs Elements
-    const savedLoopsSelect = document.getElementById('savedLoopsSelect');
+    const savedLoopsInput = document.getElementById('savedLoopsInput');
+    const savedLoopsSelect = document.getElementById('savedLoopsSelect'); // The datalist element
     const loadConfigBtn = document.getElementById('loadConfigBtn');
     const deleteConfigBtn = document.getElementById('deleteConfigBtn');
-    const saveConfigNameInput = document.getElementById('saveConfigName');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const importConfigBtn = document.getElementById('importConfigBtn');
+    const exportConfigBtn = document.getElementById('exportConfigBtn');
+    const importConfigFile = document.getElementById('importConfigFile');
 
     // Log Helper
     function appendLog(level, args) {
@@ -545,61 +548,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSavedConfigsList() {
-        savedLoopsSelect.innerHTML = '<option value="">-- Select a Preset --</option>';
+        savedLoopsSelect.innerHTML = ''; // No placeholder needed for datalist
         Object.keys(savedConfigs).sort().forEach(name => {
             const opt = document.createElement('option');
             opt.value = name;
-            opt.innerText = name;
             savedLoopsSelect.appendChild(opt);
         });
     }
 
     saveConfigBtn.onclick = () => {
-        const name = saveConfigNameInput.value.trim();
+        const name = savedLoopsInput.value.trim();
         if (!name) {
             showCustomConfirm('Please enter a name for this configuration.', null, { showCancel: false, title: "Error", confirmText: "OK" });
             return;
         }
 
-        const configSnapshot = {
-            timestamp: Date.now(),
-            scenes: scenes, // Current scenes
-            settings: {
-                timeout: timeoutInput.value,
-                maxDelay: maxDelayInput.value,
-                retryLimit: retryLimitInput.value,
-                moderationRetryLimit: moderationRetryLimitInput.value,
-                birthYear: birthYearInput.value,
-                globalPrompt: globalPromptInput.value,
-                upscale: upscaleInput.checked,
-                autoDownload: autoDownloadInput.checked,
-                autoSkip: autoSkipInput.checked,
-                reuseInitialImage: reuseInitialImageInput.checked,
-                continueOnFailure: !pauseOnErrorInput.checked,
-                pauseOnModeration: pauseOnModerationInput.checked,
-                showDashboard: showDashboardInput.checked,
-                filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
-                // Also save global image if present?
-                // For now, let's keep it simple. Local file blobs are large.
-                // We'll trust scenes.image logic (dataURL) but global initial image logic is separate.
-                // NOTE: popup.js lines 390+ handle initialImage. We should capture it if possible.
-                // But `initialImageInput` is a file input, we can't restore it directly to the INPUT.
-                // We can restore it to storage. 
-            }
-        };
+        chrome.storage.local.get(['grokLoopImage', 'grokLoopExtractedFrames'], (result) => {
+            // Clone scenes to avoid mutating the live UI state directly
+            const scenesSnapshot = JSON.parse(JSON.stringify(scenes));
+            const extractedFrames = result.grokLoopExtractedFrames || {};
 
-        savedConfigs[name] = configSnapshot;
-        chrome.storage.local.set({ 'grokLoopSavedConfigs': savedConfigs }, () => {
-            renderSavedConfigsList();
-            saveConfigNameInput.value = ''; // Clear input
-            showCustomConfirm(`Saved configuration: "${name}"`, null, { showCancel: false, title: "Saved", confirmText: "OK" });
-            savedLoopsSelect.value = name; // Select it
+            // If there is an active run with extracted frames, inject them as the custom start image for that scene in the export
+            if (typeof lastKnownState !== 'undefined' && lastKnownState && lastKnownState.segments) {
+                lastKnownState.segments.forEach((seg, i) => {
+                    // If the scene doesn't already have a user-uploaded image, but we extracted one during the run
+                    if (scenesSnapshot[i] && !scenesSnapshot[i].image && extractedFrames[i]) {
+                        scenesSnapshot[i].image = {
+                            dataUrl: extractedFrames[i],
+                            fileName: `extracted_frame_scene_${i + 1}.png`
+                        };
+                    }
+                });
+            }
+
+            const configSnapshot = {
+                timestamp: Date.now(),
+                scenes: scenesSnapshot, // Merged scenes with extracted frames
+                globalImage: result.grokLoopImage || null, // Include global image
+                settings: {
+                    timeout: timeoutInput.value,
+                    maxDelay: maxDelayInput.value,
+                    retryLimit: retryLimitInput.value,
+                    moderationRetryLimit: moderationRetryLimitInput.value,
+                    birthYear: birthYearInput.value,
+                    globalPrompt: globalPromptInput.value,
+                    upscale: upscaleInput.checked,
+                    autoDownload: autoDownloadInput.checked,
+                    autoSkip: autoSkipInput.checked,
+                    reuseInitialImage: reuseInitialImageInput.checked,
+                    continueOnFailure: !pauseOnErrorInput.checked,
+                    pauseOnModeration: pauseOnModerationInput.checked,
+                    showDashboard: showDashboardInput.checked,
+                    filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
+                }
+            };
+
+            savedConfigs[name] = configSnapshot;
+            chrome.storage.local.set({ 'grokLoopSavedConfigs': savedConfigs }, () => {
+                renderSavedConfigsList();
+                showCustomConfirm(`Saved configuration: "${name}"`, null, { showCancel: false, title: "Saved", confirmText: "OK" });
+                savedLoopsInput.value = name; // Keep it selected
+            });
         });
     };
 
     loadConfigBtn.onclick = () => {
-        const name = savedLoopsSelect.value;
-        if (!name || !savedConfigs[name]) return;
+        const name = savedLoopsInput.value.trim();
+        if (!name || !savedConfigs[name]) {
+            showCustomConfirm('Please select or type a valid preset name to load.', null, { showCancel: false, title: "Error", confirmText: "OK" });
+            return;
+        }
 
         showCustomConfirm(`Load preset "${name}"? This will overwrite your current prompts and settings.`, () => {
             const data = savedConfigs[name];
@@ -610,7 +628,26 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBulkFromScenes();
             saveScenes(); // Persist to storage immediately
 
-            // 2. Restore Settings
+            // 2. Restore Global Image
+            const restoredImageIndicator = document.getElementById('restoredImageIndicator');
+            const restoredImagePreview = document.getElementById('restoredImagePreview');
+            const restoredImageText = document.getElementById('restoredImageText');
+            const initialImage = document.getElementById('initialImage');
+
+            if (data.globalImage) {
+                chrome.storage.local.set({ 'grokLoopImage': data.globalImage });
+                if (restoredImageText) restoredImageText.textContent = `✓ ${data.globalImage.fileName}`;
+                if (restoredImagePreview) restoredImagePreview.src = data.globalImage.dataUrl;
+                if (restoredImageIndicator) restoredImageIndicator.style.display = 'flex';
+            } else {
+                chrome.storage.local.remove('grokLoopImage');
+                if (restoredImageText) restoredImageText.textContent = '';
+                if (restoredImagePreview) restoredImagePreview.src = '';
+                if (restoredImageIndicator) restoredImageIndicator.style.display = 'none';
+            }
+            if (initialImage) initialImage.value = ''; // clear native input file since we just restored or cleared from memory
+
+            // 3. Restore Settings
             if (data.settings) {
                 if (data.settings.timeout) timeoutInput.value = data.settings.timeout;
                 if (data.settings.maxDelay) maxDelayInput.value = data.settings.maxDelay;
@@ -648,16 +685,81 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     deleteConfigBtn.onclick = () => {
-        const name = savedLoopsSelect.value;
-        if (!name || !savedConfigs[name]) return;
+        const name = savedLoopsInput.value.trim();
+        if (!name || !savedConfigs[name]) {
+            showCustomConfirm('Please select or type a valid preset name to delete.', null, { showCancel: false, title: "Error", confirmText: "OK" });
+            return;
+        }
 
         showCustomConfirm(`Permanently delete preset "${name}"?`, () => {
             delete savedConfigs[name];
             chrome.storage.local.set({ 'grokLoopSavedConfigs': savedConfigs }, () => {
                 renderSavedConfigsList();
+                savedLoopsInput.value = ''; // clear input
             });
         }, { title: "Delete Preset", confirmText: "Delete" });
     };
+
+    if (exportConfigBtn) {
+        exportConfigBtn.onclick = () => {
+            if (Object.keys(savedConfigs).length === 0) {
+                showCustomConfirm('No saved configurations to export.', null, { title: "Export Empty", showCancel: false, confirmText: "OK" });
+                return;
+            }
+            const blob = new Blob([JSON.stringify(savedConfigs, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `grok_configs_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+    }
+
+    if (importConfigBtn && importConfigFile) {
+        importConfigBtn.onclick = () => {
+            importConfigFile.click();
+        };
+
+        importConfigFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedConfigs = JSON.parse(event.target.result);
+                    if (typeof importedConfigs !== 'object' || importedConfigs === null) throw new Error("Invalid config format.");
+
+                    // Merge configs
+                    let importedCount = 0;
+                    for (const [key, value] of Object.entries(importedConfigs)) {
+                        if (value && typeof value === 'object' && value.scenes && value.settings) {
+                            savedConfigs[key] = value;
+                            importedCount++;
+                        }
+                    }
+
+                    if (importedCount > 0) {
+                        chrome.storage.local.set({ 'grokLoopSavedConfigs': savedConfigs }, () => {
+                            renderSavedConfigsList();
+                            showCustomConfirm(`Successfully imported ${importedCount} configurations.`, null, { title: "Import Successful", showCancel: false, confirmText: "OK" });
+                        });
+                    } else {
+                        showCustomConfirm('No valid configurations found in the file.', null, { title: "Import Failed", showCancel: false, confirmText: "OK" });
+                    }
+                } catch (error) {
+                    showCustomConfirm('Error parsing configuration file.', null, { title: "Import Failed", showCancel: false, confirmText: "OK" });
+                    console.error("Import error:", error);
+                } finally {
+                    importConfigFile.value = ''; // Reset input
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
 
     // Load presets on startup
     loadSavedConfigs();

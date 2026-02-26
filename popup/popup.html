@@ -124,34 +124,55 @@
     </div>
 
     <!-- Saved Loops Manager -->
-    <div style="background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-bottom: 20px;">
-      <label
-        style="color: var(--primary); font-size: 11px; font-weight: bold; display: block; margin-bottom: 8px;">SAVED
-        CONFIGURATIONS</label>
+    <div style="background: #222; padding: 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 20px;">
 
-      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-        <select id="savedLoopsSelect"
-          style="flex: 1; background: #111; border: 1px solid #444; color: #eee; padding: 6px; border-radius: 4px; font-size: 12px;"
-          title="Select a previously saved configuration to load.">
-          <option value="">-- Select a Preset --</option>
-        </select>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <label style="color: var(--primary); font-size: 11px; font-weight: bold; margin: 0; display: block;">SAVED
+          CONFIGURATIONS</label>
+        <div style="display: flex; gap: 6px;">
+          <button id="importConfigBtn" title="Import from file"
+            style="background: #333; color: #ccc; border: 1px solid #444; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 10px; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Import
+          </button>
+          <button id="exportConfigBtn" title="Export to file"
+            style="background: #333; color: #ccc; border: 1px solid #444; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 10px; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+        <input type="text" id="savedLoopsInput" list="savedLoopsSelect" placeholder="-- Enter or Select a Preset --"
+          style="flex: 1; background: #111; border: 1px solid #444; color: #eee; padding: 6px 8px; border-radius: 4px; font-size: 12px; min-width: 0;"
+          title="Type a new name to save, or select an existing preset to load.">
+
+        <datalist id="savedLoopsSelect">
+          <!-- Options injected via JS -->
+        </datalist>
+
         <button id="loadConfigBtn"
-          style="background: #444; color: #fff; border: 1px solid #555; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 11px;"
+          style="background: #4a4a4a; color: #fff; border: 1px solid #5a5a5a; padding: 0 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 500;"
           title="Load the selected configuration (Overwrites current settings).">Load</button>
+
+        <button id="saveConfigBtn"
+          style="background: var(--primary); color: #fff; border: none; padding: 0 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap;"
+          title="Save the current scenes and settings to this preset name.">Save</button>
+
         <button id="deleteConfigBtn"
           style="background: #333; color: #f55; border: 1px solid #444; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 16px; line-height: 1;"
           title="Permanently delete the selected configuration preset.">&times;</button>
       </div>
-
-      <div style="display: flex; gap: 8px;">
-        <input type="text" id="saveConfigName" placeholder="Name this configuration..."
-          style="flex: 1; background: #111; border: 1px solid #444; color: #eee; padding: 6px; border-radius: 4px; font-size: 12px;"
-          title="Enter a name for the new configuration preset.">
-        <button id="saveConfigBtn"
-          style="background: var(--primary); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;"
-          title="Save the current scenes and settings as a new preset.">Save
-          As New</button>
-      </div>
+      <input type="file" id="importConfigFile" accept=".json" style="display: none;">
     </div>
 
     <div class="row">
@@ -159,7 +180,8 @@
         <label for="filenamePrefix"
           title="Optional custom prefix to prepend to all downloaded video filenames (e.g., 'MyProject_Scene').">Filename
           Prefix</label>
-        <input type="text" id="filenamePrefix" placeholder="e.g. MyProject_" title="Prepends to grok_video_segment_X.mp4">
+        <input type="text" id="filenamePrefix" placeholder="e.g. MyProject_"
+          title="Prepends to grok_video_segment_X.mp4">
       </div>
     </div>
 

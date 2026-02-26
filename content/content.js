@@ -1590,6 +1590,9 @@ if (window.GrokLoopInjected) {
 
             // REMOVED: Legacy Loop Expansion (was causing crash)
 
+            // Clear extracted frames from previous runs
+            chrome.storage.local.remove('grokLoopExtractedFrames');
+
             state.isRunning = true;
             state.currentSegmentIndex = 0;
             this.dashboard.update();
@@ -1901,7 +1904,15 @@ if (window.GrokLoopInjected) {
                         const prevSeg = state.segments[index - 1];
                         if (prevSeg.videoUrl) {
                             console.log(`Extracting last frame from Segment ${index} (Late Extract)...`);
-                            seg.inputImage = await extractLastFrame(prevSeg.videoUrl);
+                            const extractedBlob = await extractLastFrame(prevSeg.videoUrl);
+                            seg.inputImage = extractedBlob;
+                            blobToBase64(extractedBlob).then(b64 => {
+                                chrome.storage.local.get(['grokLoopExtractedFrames'], (res) => {
+                                    const frames = res.grokLoopExtractedFrames || {};
+                                    frames[index] = b64;
+                                    chrome.storage.local.set({ grokLoopExtractedFrames: frames });
+                                });
+                            });
                         } else {
                             throw new Error(`Previous segment ${index} has no output video to chain from.`);
                         }
@@ -2017,6 +2028,13 @@ if (window.GrokLoopInjected) {
                                     const nextFrame = await extractLastFrame(videoUrl);
                                     nextSeg.inputImage = nextFrame;
                                     state.lastGeneratedImage = nextFrame; // Update global backup
+                                    blobToBase64(nextFrame).then(b64 => {
+                                        chrome.storage.local.get(['grokLoopExtractedFrames'], (res) => {
+                                            const frames = res.grokLoopExtractedFrames || {};
+                                            frames[index + 1] = b64;
+                                            chrome.storage.local.set({ grokLoopExtractedFrames: frames });
+                                        });
+                                    });
                                     extractSuccess = true;
                                     console.log('Proactive extraction successful.');
                                 } catch (e) {
@@ -2038,7 +2056,15 @@ if (window.GrokLoopInjected) {
                             console.log(`Segment ${index + 2} has a custom image. Skipping frame extraction.`);
                             // Still update lastGeneratedImage for backup
                             try {
-                                state.lastGeneratedImage = await extractLastFrame(videoUrl);
+                                const fallbackFrame = await extractLastFrame(videoUrl);
+                                state.lastGeneratedImage = fallbackFrame;
+                                blobToBase64(fallbackFrame).then(b64 => {
+                                    chrome.storage.local.get(['grokLoopExtractedFrames'], (res) => {
+                                        const frames = res.grokLoopExtractedFrames || {};
+                                        frames[index + 1] = b64;
+                                        chrome.storage.local.set({ grokLoopExtractedFrames: frames });
+                                    });
+                                });
                             } catch (e) { }
                         }
                     }

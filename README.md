@@ -6,6 +6,12 @@ This tool allows you to create seamless video sequences by automatically using t
 
 ## Recent Updates (Release Notes)
 
+**v1.6.6**
+*   **💾 Import/Export Configs:** Added ability to import and export saved configurations (presets) as JSON files. This includes saving the Global Initial Image along with your preset loops!
+*   **🖼️ Smart Resume Export:** When saving a configuration during an active run, any frames automatically extracted from your videos will be included in the export, allowing you to seamlessly pick up where you left off!
+*   **🐛 Crash Fix:** Extracted video frames are now correctly saved as Base64 in local storage during active runs, preventing them from being stripped out (resulting in missing images) when exporting configurations to JSON. 
+*   **✨ UI Refresh:** Redesigned the "Saved Configurations" section in settings for a much cleaner layout with dedicated icon buttons.
+
 **v1.6.5 (Hotfixes)**
 *   **🛠️ Upscale Reliability:** Fixed an issue where the extension failed to find the Upscale button due to Grok UI changes. It now precisely targets the new "Video Settings" SVG menu and ignores history items.
 *   **🚀 Performance Boost:** Added an 800ms debounce buffer when typing in individual Scene Prompts to completely eliminate popup UI freezing/sluggishness.

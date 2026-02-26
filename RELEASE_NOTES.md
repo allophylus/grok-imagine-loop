@@ -1,5 +1,11 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.6
+- **Feature:** **Import & Export Configurations**. Added the ability to export your Saved Loops (including prompts, settings, and global images) to a JSON file and import them later for easy backups and sharing.
+- **Feature:** **Smart Resume Export**. When saving a configuration during an active run, any frames automatically extracted from your videos will also be included in the export. This lets you seamlessly pick up where you left off later!
+- **Fix:** **Configuration Export Missing Frames**. Extracted video frames are now correctly saved as Base64 in local storage during active runs, preventing them from being stripped out (resulting in missing images) when exporting configurations to JSON. 
+- **UI:** **Settings Redesign**. Overhauled the design of the Saved Configurations section in the popup to fix layout issues and make the interface cleaner with intuitive icon buttons.
+
 ## v1.6.5 (Hotfixes)
 - **Fix:** **Upscale Reliability**. Fixed an issue where the extension failed to find the Upscale button due to Grok UI changes. It now precisely targets the new "Video Settings" SVG menu and ignores history items.
 - **Improvement:** **Performance Boost**. Added an 800ms debounce buffer when typing in individual Scene Prompts to completely eliminate popup UI freezing/sluggishness.
