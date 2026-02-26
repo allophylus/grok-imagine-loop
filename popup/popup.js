@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let scenes = []; // Array of { prompt: string, image: { dataUrl, fileName } | null }
     let savedConfigs = {}; // { "Name": { scenes, settings, timestamp } }
+    let lastKnownState = null;
 
     // --- Helper for Dynamic Label ---
     function updateInitialImageLabel() {
@@ -1091,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Track global state
-    let lastKnownState = null;
+    // Main loop logic state tracker
 
     // Start / Pause / Resume Logic
     startBtn.onclick = async () => {
