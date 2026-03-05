@@ -170,18 +170,18 @@ if (window.GrokLoopInjected) {
             'видалити', 'закрити' // Ukrainian
         ],
         moderation: [
-            'content moderated', 'try a different idea', // English
-            'contenido moderado', // Spanish
-            'contenu modéré', // French
-            'moderiert', // German
-            '内容已过滤', // Chinese (Simplified)
-            '內容已過濾', // Chinese (Traditional)
-            '不適切なコンテンツ', // Japanese
-            'контент модерируется', // Russian
-            'içerik denetlendi', // Turkish
-            'konten dimoderasi', // Indonesian
+            'content moderated', 'try a different idea', 'content may violate', 'violates guidelines', // English (NEW: "violates guidelines")
+            'contenido moderado', 'intenta con otra idea', // Spanish
+            'contenu modéré', 'essayez une autre idée', // French
+            'moderiert', 'versuchen sie eine andere idee', // German
+            '内容已过滤', '尝试不同的想法', // Chinese (Simplified)
+            '內容已過濾', '嘗試不同的想法', // Chinese (Traditional)
+            '不適切なコンテンツ', '別のアイデアを試す', // Japanese
+            'контент модерируется', 'попробуйте другую идею', // Russian
+            'içerik denetlendi', 'farklı bir fikir deneyin', // Turkish
+            'konten dimoderasi', 'coba ide berbeda', // Indonesian
             'inhoud gemodereerd', // Dutch
-            'contenuto moderato', // Italian
+            'contenuto moderato', 'prova un\'altra idea', // Italian
             'treść moderowana', // Polish
             'conținut moderat', // Romanian
             'innehåll modererat', // Swedish
@@ -191,11 +191,42 @@ if (window.GrokLoopInjected) {
             'محتوى خاضع للإشراف', // Arabic
             'محتوا تعدیل شد', // Persian
             'na-moderate ang nilalaman', // Filipino
-            '콘텐츠 검토됨', // Korean
+            '콘텐츠 검토됨', '다른 아이디어 시도', // Korean
             'samagri sanyamit', // Hindi (Approx)
             'moderet', // Bengali (borrowed)
             'conteúdo moderado', // Portuguese
             'контент модерується' // Ukrainian
+        ],
+        regenerate: [
+            'redo', 'regenerate', 'try again', 'retry', 'vary', // English
+            'redo video', 'regenerate video', 'try again video', // NEW: Explicit "video" variants
+            'regenerar', 'intentar de nuevo', 'variar', // Spanish
+            'régénérer', 'réessayer', // French
+            'neu erzeugen', 'erneut versuchen', // German
+            '重新生成', '重试', // Chinese (Simplified)
+            '重新生成', '重試', // Chinese (Traditional)
+            '再試行', '再生成', // Japanese
+            'регенерировать', 'попробовать снова', // Russian
+            'yeniden oluştur', 'tekrar dene', // Turkish
+            'buat ulang', 'coba lagi', // Indonesian
+            'opnieuw', 'probeer opnieuw', // Dutch
+            'rigenera', 'riprova', // Italian
+            'wygeneruj ponownie', 'spróbuj ponownie', // Polish
+            'regenerează', 'încearcă din nou', // Romanian
+            'regenerera', 'försök igen', // Swedish
+            'tạo lại', 'thử lại', // Vietnamese
+            'regenerovat', 'zkusit znovu', // Czech
+            'újragonerálás', 'próbáld újra', // Hungarian
+            'إعادة التوليد', 'حاول مرة أخرى', // Arabic
+            'تولید مجدد', 'تلاش مجدد', // Persian
+            'muling buuin', // Filipino
+            '재생성', '다시 시도', // Korean
+            'phir se banaye', // Hindi
+            'abar korun', // Bengali
+            'punha banva', // Marathi
+            'meendum', // Tamil
+            'malli', // Telugu
+            'відтворити', 'спробувати ще раз' // Ukrainian
         ],
         upscale: [
             'upscale', 'enhance', 'hd', 'high definition', 'alta definizione', // English & generic
@@ -858,7 +889,7 @@ if (window.GrokLoopInjected) {
                     return;
                 }
 
-                // Multi-Language Moderation Check
+                // Multi-Language Moderation Check (TEXT-BASED)
                 if (TRANSLATIONS.moderation.some(k => bodyText.includes(k))) {
                     // Verify it's not just in the prompt textarea
                     // Find the element containing this text to be sure it's an alert/toast
@@ -873,6 +904,47 @@ if (window.GrokLoopInjected) {
                         reject(new Error('Content Moderated'));
                         return;
                     }
+                }
+
+                // NEW (March 2026): Visual Moderation Detection
+                // Check for blurred/thumbnail placeholders that indicate moderated content
+                const allImages = Array.from(document.querySelectorAll('img'));
+                const blurredImages = allImages.filter(img => {
+                    if (img.offsetParent === null) return false; // Skip invisible
+                    const style = window.getComputedStyle(img);
+                    // Check for blur filter (common moderation technique)
+                    const hasBlur = style.filter && (style.filter.includes('blur') || style.blur);
+                    // Check for low opacity (another moderation technique)
+                    const hasLowOpacity = parseFloat(style.opacity) < 0.5;
+                    // Check for placeholder patterns in src
+                    const isPlaceholder = img.src && (img.src.includes('placeholder') || img.src.includes('blur') || img.src.includes('moderate'));
+                    return hasBlur || hasLowOpacity || isPlaceholder;
+                });
+
+                // If we see multiple blurred images in the generation area, likely moderated
+                if (blurredImages.length >= 3) {
+                    console.warn(`Visual Moderation Detected: ${blurredImages.length} blurred images found`);
+                    cleanup();
+                    reject(new Error('Content Moderated (Visual)'));
+                    return;
+                }
+
+                // NEW: Check for "Regenerate" / "Redo video" buttons that appear after moderation
+                const regenerateBtn = Array.from(document.querySelectorAll('button, div[role="button"]')).find(b => {
+                    if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
+                    if (b.offsetParent === null) return false;
+                    const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
+                    // Look for regenerate/redo buttons that appear AFTER generation attempt
+                    return TRANSLATIONS.regenerate.some(k => text.includes(k) && text.length < 30);
+                });
+
+                if (regenerateBtn && !existingVideos.has('moderation-detected')) {
+                    console.warn('Regenerate button found - likely moderation');
+                    // Mark as moderation to prevent infinite loop
+                    existingVideos.add('moderation-detected');
+                    cleanup();
+                    reject(new Error('Content Moderated (Regenerate Button)'));
+                    return;
                 }
 
                 // Check for "Broken Eye" Generation Failure icon
