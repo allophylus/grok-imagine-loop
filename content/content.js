@@ -735,8 +735,9 @@ if (window.GrokLoopInjected) {
         let sendBtn = null;
 
         for (let i = 0; i < 20; i++) {
-            // Revert to global search to catch floating footers, but EXCLUDE Nav/Sidebar
-            const buttons = Array.from(document.querySelectorAll('button'));
+            // FIX: Grok uses <div> elements for buttons, not just <button>
+            // Search for both button AND clickable div elements
+            const buttons = Array.from(document.querySelectorAll('button, div[role="button"], div[class*="flex"][class*="items-center"]'));
             sendBtn = buttons.find(b => {
                 // EXCLUSION: Ignore buttons in Sidebar/Nav
                 if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
@@ -748,10 +749,14 @@ if (window.GrokLoopInjected) {
                 const isMakeVideo = TRANSLATIONS.makeVideo.some(k => label === k || label.includes(k));
 
                 // NEW (March 2026): Check for arrow/send icon in SVG
-                const hasSendIcon = b.querySelector('svg path[d*="arrow"], svg[data-icon*="send"], svg[aria-label*="send"]');
+                // FIX: Also check the SVG path data for the up-arrow pattern (M6 11L12 5 = upward arrow)
+                const svg = b.querySelector('svg');
+                const svgPath = svg?.querySelector('path')?.getAttribute('d') || '';
+                const hasUpArrow = svgPath.includes('M6 11L12 5') || svgPath.includes('M12 5L18 11') || svgPath.includes('M12 5V19');
+                const hasSendIcon = hasUpArrow || b.querySelector('svg path[d*="arrow"], svg[data-icon*="send"], svg[aria-label*="send"]');
                 
                 // NEW: Check for upload arrow (↑) commonly used for send
-                const isArrowButton = b.querySelector('svg') && (label.includes('send') || label.includes('generate') || label.includes('imagine'));
+                const isArrowButton = svg && (label.includes('send') || label.includes('generate') || label.includes('imagine'));
 
                 return isSend || isMakeVideo || hasSendIcon || isArrowButton;
             });
@@ -2411,13 +2416,20 @@ if (window.GrokLoopInjected) {
                                     // Find and click send button - use multiple strategies
                                     let sendBtn = null;
                                     
-                                    // Strategy 1: Arrow-up icon button
-                                    const arrowBtns = Array.from(document.querySelectorAll('button svg[data-icon="arrow-up"], button svg path[d*="arrow" i]'));
+                                    // Strategy 1: Arrow-up icon button (FIX: Also check div elements, not just button)
+                                    // The Grok send button is a div with SVG containing path: M6 11L12 5M12 5L18 11M12 5V19
+                                    const arrowBtns = Array.from(document.querySelectorAll('button svg, div svg, div[role="button"] svg'));
                                     for (const svg of arrowBtns) {
-                                        const btn = svg.closest('button');
-                                        if (btn && !btn.disabled && btn.offsetParent !== null) {
-                                            sendBtn = btn;
-                                            break;
+                                        const path = svg.querySelector('path');
+                                        const pathData = path?.getAttribute('d') || '';
+                                        // Check for the up-arrow pattern
+                                        if (pathData.includes('M6 11L12 5') || pathData.includes('M12 5L18 11') || pathData.includes('M12 5V19')) {
+                                            const btn = svg.closest('button, div[role="button"], div');
+                                            if (btn && btn.offsetParent !== null) {
+                                                sendBtn = btn;
+                                                console.log('Found send button via SVG arrow path:', btn.tagName, btn.className?.substring(0, 50));
+                                                break;
+                                            }
                                         }
                                     }
                                     
@@ -2426,10 +2438,10 @@ if (window.GrokLoopInjected) {
                                         sendBtn = document.querySelector('button[type="submit"]:not([disabled])');
                                     }
                                     
-                                    // Strategy 3: Aria-label match
+                                    // Strategy 3: Aria-label match (also check divs)
                                     if (!sendBtn) {
-                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="send" i], button[aria-label*="generate" i], button[aria-label*="imagine" i]'))
-                                            .find(b => !b.disabled && b.offsetParent !== null);
+                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="send" i], button[aria-label*="generate" i], button[aria-label*="imagine" i], div[aria-label*="send" i], div[aria-label*="generate" i]'))
+                                            .find(b => b.offsetParent !== null);
                                     }
                                     
                                     if (sendBtn) {
