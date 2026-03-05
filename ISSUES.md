@@ -31,3 +31,12 @@
 - **Real-Time Config**: Settings update instantly, no restart needed
 - **Global Prompt Support**: Implemented "Global Suffix" field
 - **More Button**: Fixed logic that accidentally clicked "Search" instead of "More"
+
+## 🔄 In Progress (v1.7.1 - March 2026 UI Update)
+
+- **Grok UI Redesign**: Updated selectors for new "Type to imagine" input bar and arrow send button (↑)
+- **Text Insertion Validation**: Added verification that text was inserted before clicking send
+- **Timing Buffers**: Increased post-insertion wait from 500ms to 800-1000ms
+- **Send Button Detection**: Added SVG arrow icon detection for new UI
+- **Issue #9**: "Prompt not working" - Fixed with new selectors + validation
+- **Issue #8**: "Text pasting out of sync" - Fixed with validation + increased timing

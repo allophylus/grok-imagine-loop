@@ -251,13 +251,15 @@ if (window.GrokLoopInjected) {
     // --- Selectors ---
     const SELECTORS = {
         textArea: 'textarea, div[contenteditable="true"], div[role="textbox"]',
-        // New Grok UI (Feb 2026) uses specific role-based textbox paragraphs
-        promptInput: 'div[role="textbox"] p, paragraph[role="presentation"], div[role="textbox"]',
+        // New Grok Imagine UI (March 2026) - Updated selectors
+        promptInput: 'div[role="textbox"] p, paragraph[role="presentation"], div[role="textbox"], input[placeholder*="imagine"], div[placeholder*="imagine"]',
         // Note: Specific button selectors now handled dynamically via TRANSLATIONS
         uploadButton: 'button[aria-label], button[title], button svg rect',
-        sendButton: 'button[type="submit"], button[aria-label]',
-        grokUpload: 'button[aria-label]',
-        imagineMode: 'button' // Dynamic search used in sendPromptToGrok
+        sendButton: 'button[type="submit"], button[aria-label], button svg[data-icon="arrow-up"], button[aria-label*="send"], button[aria-label*="generate"]',
+        grokUpload: 'button[aria-label*="upload"], button[title*="upload"]',
+        imagineMode: 'button', // Dynamic search used in sendPromptToGrok
+        // New: Send arrow button (↑) in bottom right of input bar
+        sendArrowButton: 'button svg path[d*="arrow"], button[aria-label*="Send"], button[type="submit"]'
     };
 
     // --- State ---
@@ -648,7 +650,14 @@ if (window.GrokLoopInjected) {
         console.log('Inserting text (Fast Method)...');
         await insertTextFast(inputArea, text);
 
-        await new Promise(r => setTimeout(r, 500)); // Reduced post-type delay
+        // NEW (March 2026): Validate text was actually inserted
+        await new Promise(r => setTimeout(r, 800)); // Increased from 500ms
+        const insertedText = inputArea.textContent || inputArea.value || '';
+        if (!insertedText || !insertedText.includes(text.substring(0, Math.min(20, text.length)))) {
+            console.warn('[Content] Text insertion validation failed. Retrying...');
+            await insertTextFast(inputArea, text);
+            await new Promise(r => setTimeout(r, 1000)); // Longer retry wait
+        }
 
         // --- SUBMISSION LOGIC ---
 
@@ -694,7 +703,13 @@ if (window.GrokLoopInjected) {
                 const isSend = TRANSLATIONS.send.some(k => label === k || label.includes(k));
                 const isMakeVideo = TRANSLATIONS.makeVideo.some(k => label === k || label.includes(k));
 
-                return isSend || isMakeVideo;
+                // NEW (March 2026): Check for arrow/send icon in SVG
+                const hasSendIcon = b.querySelector('svg path[d*="arrow"], svg[data-icon*="send"], svg[aria-label*="send"]');
+                
+                // NEW: Check for upload arrow (↑) commonly used for send
+                const isArrowButton = b.querySelector('svg') && (label.includes('send') || label.includes('generate') || label.includes('imagine'));
+
+                return isSend || isMakeVideo || hasSendIcon || isArrowButton;
             });
 
             if (sendBtn) {
