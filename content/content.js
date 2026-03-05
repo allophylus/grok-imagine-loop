@@ -2312,14 +2312,40 @@ if (window.GrokLoopInjected) {
                         const limit = state.config.moderationRetryLimit || 2; // Default 2
 
                         if (modAttempts <= limit) {
-                            console.warn(`Content Moderation hit (${modAttempts}/${limit}). Re-submitting prompt...`);
+                            console.warn(`Content Moderation hit (${modAttempts}/${limit}). Clearing moderated content and re-submitting...`);
                             seg.status = `moderated (${modAttempts}/${limit})`;
                             this.dashboard.update();
 
-                            await new Promise(r => setTimeout(r, 5000));
+                            await new Promise(r => setTimeout(r, 3000));
 
-                            // FIX: Grok doesn't always show a Redo button after moderation.
-                            // Instead, do a full re-submit: clear input, re-insert prompt, click send
+                            // FIX: After moderation, Grok leaves blurred content cards on screen.
+                            // We need to close these first to reset the UI state, then re-submit.
+                            console.log('Clearing moderated/blurred content cards...');
+                            
+                            // Step 1: Close all blurred content cards (click the X buttons)
+                            const closeButtons = Array.from(document.querySelectorAll('button[aria-label*="close" i], button[aria-label*="dismiss" i], button[aria-label*="remove" i], .dismiss-button, [class*="close" i]'))
+                                .filter(btn => {
+                                    if (btn.offsetParent === null) return false; // Skip invisible
+                                    if (btn.closest('nav') || btn.closest('aside')) return false; // Skip nav buttons
+                                    const rect = btn.getBoundingClientRect();
+                                    return rect.width > 20 && rect.width < 60; // Close buttons are typically small
+                                });
+                            
+                            if (closeButtons.length > 0) {
+                                console.log(`Found ${closeButtons.length} close buttons, clicking...`);
+                                for (const btn of closeButtons) {
+                                    await simulateClick(btn);
+                                    await new Promise(r => setTimeout(r, 300));
+                                }
+                                await new Promise(r => setTimeout(r, 1000)); // Wait for cards to disappear
+                            } else {
+                                // Alternative: Navigate away and back to reset state
+                                console.log('No close buttons found, navigating to reset UI state...');
+                                window.location.href = 'https://grok.com/imagine';
+                                await new Promise(r => setTimeout(r, 3000)); // Wait for page reload
+                            }
+
+                            // Step 2: Re-submit the prompt
                             console.log('Re-submitting prompt after moderation (full retry)...');
                             
                             // Find the input area
@@ -2336,19 +2362,41 @@ if (window.GrokLoopInjected) {
                                 if (promptText) {
                                     console.log('Re-inserting prompt:', promptText.substring(0, 50) + '...');
                                     await insertTextFast(inputArea, promptText);
-                                    await new Promise(r => setTimeout(r, 800));
+                                    await new Promise(r => setTimeout(r, 1000)); // Longer wait for UI to settle
                                     
-                                    // Find and click send button
-                                    const sendBtn = Array.from(document.querySelectorAll('button[type="submit"], button[aria-label*="send" i], button[aria-label*="generate" i], button svg[data-icon="arrow-up"]'))
-                                        .find(b => !b.disabled && b.offsetParent !== null);
+                                    // Find and click send button - use multiple strategies
+                                    let sendBtn = null;
+                                    
+                                    // Strategy 1: Arrow-up icon button
+                                    const arrowBtns = Array.from(document.querySelectorAll('button svg[data-icon="arrow-up"], button svg path[d*="arrow" i]'));
+                                    for (const svg of arrowBtns) {
+                                        const btn = svg.closest('button');
+                                        if (btn && !btn.disabled && btn.offsetParent !== null) {
+                                            sendBtn = btn;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Strategy 2: Submit type button
+                                    if (!sendBtn) {
+                                        sendBtn = document.querySelector('button[type="submit"]:not([disabled])');
+                                    }
+                                    
+                                    // Strategy 3: Aria-label match
+                                    if (!sendBtn) {
+                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="send" i], button[aria-label*="generate" i], button[aria-label*="imagine" i]'))
+                                            .find(b => !b.disabled && b.offsetParent !== null);
+                                    }
                                     
                                     if (sendBtn) {
-                                        console.log('Clicking send button after moderation retry...');
-                                        await simulateClick(sendBtn.closest('button') || sendBtn);
+                                        console.log('Clicking send button after moderation retry...', sendBtn);
+                                        await simulateClick(sendBtn);
+                                        await new Promise(r => setTimeout(r, 500)); // Wait for click to register
                                     } else {
                                         // Fallback: Enter key
                                         console.warn('Send button not found, using Enter key fallback...');
                                         inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13 }));
+                                        inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13 }));
                                     }
                                 }
                             } else {
