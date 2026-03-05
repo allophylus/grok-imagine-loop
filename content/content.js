@@ -937,8 +937,8 @@ if (window.GrokLoopInjected) {
                 
                 // If content exists, regenerate button is NORMAL (user can regenerate if they don't like it)
                 if (hasAnyContent) {
-                    console.log('Content detected - regenerate button is normal, NOT moderation');
-                    // Do NOT trigger moderation
+                    // Do NOT trigger moderation - regenerate button is expected when content exists
+                    // (Removed spammy log that was firing every poll interval)
                 } else {
                     // No content + regenerate button = likely moderation
                     const regenerateBtn = Array.from(document.querySelectorAll('button, div[role="button"]')).find(b => {
@@ -987,7 +987,7 @@ if (window.GrokLoopInjected) {
 
             const observer = new MutationObserver(check);
             observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
-            const poller = setInterval(check, 1000);
+            const poller = setInterval(check, 4000); // Reduced from 1000ms to 4000ms to reduce CPU usage and log spam
             const failTimer = setTimeout(() => {
                 cleanup();
                 console.error('Timeout waiting for video. Current videos:', Array.from(document.querySelectorAll('video')).map(v => v.src));
@@ -2312,32 +2312,47 @@ if (window.GrokLoopInjected) {
                         const limit = state.config.moderationRetryLimit || 2; // Default 2
 
                         if (modAttempts <= limit) {
-                            console.warn(`Content Moderation hit (${modAttempts}/${limit}). Waiting 5s then clicking Redo...`);
+                            console.warn(`Content Moderation hit (${modAttempts}/${limit}). Re-submitting prompt...`);
                             seg.status = `moderated (${modAttempts}/${limit})`;
                             this.dashboard.update();
 
                             await new Promise(r => setTimeout(r, 5000));
 
-                            // Try to find and click Redo/Regenerate button (Multi-Language)
-                            // FIX: Exclude Dashboard buttons to prevent self-clicking
-                            const redoBtn = Array.from(document.querySelectorAll('button')).find(b => {
-                                // Exclude dashboard
-                                if (b.closest('#grok-loop-dashboard')) return false;
-
-                                const text = (b.innerText || '').toLowerCase();
-                                const aria = (b.getAttribute('aria-label') || '').toLowerCase();
-                                const title = (b.title || '').toLowerCase();
-
-                                return TRANSLATIONS.regenerate.some(k =>
-                                    text.includes(k) || aria.includes(k) || title.includes(k)
-                                ) && !b.disabled;
-                            });
-
-                            if (redoBtn) {
-                                console.log('Clicking Redo/Regenerate button:', redoBtn.innerText || redoBtn.ariaLabel);
-                                await simulateClick(redoBtn);
+                            // FIX: Grok doesn't always show a Redo button after moderation.
+                            // Instead, do a full re-submit: clear input, re-insert prompt, click send
+                            console.log('Re-submitting prompt after moderation (full retry)...');
+                            
+                            // Find the input area
+                            const inputArea = document.querySelector('textarea[placeholder*="imagine"], textarea[placeholder*="Type"], div[contenteditable="true"]');
+                            if (inputArea) {
+                                // Clear existing content
+                                inputArea.textContent = '';
+                                inputArea.value = '';
+                                
+                                // Re-insert the prompt
+                                const currentSegment = state.loopData.segments[index];
+                                const promptText = currentSegment ? currentSegment.prompt : '';
+                                
+                                if (promptText) {
+                                    console.log('Re-inserting prompt:', promptText.substring(0, 50) + '...');
+                                    await insertTextFast(inputArea, promptText);
+                                    await new Promise(r => setTimeout(r, 800));
+                                    
+                                    // Find and click send button
+                                    const sendBtn = Array.from(document.querySelectorAll('button[type="submit"], button[aria-label*="send" i], button[aria-label*="generate" i], button svg[data-icon="arrow-up"]'))
+                                        .find(b => !b.disabled && b.offsetParent !== null);
+                                    
+                                    if (sendBtn) {
+                                        console.log('Clicking send button after moderation retry...');
+                                        await simulateClick(sendBtn.closest('button') || sendBtn);
+                                    } else {
+                                        // Fallback: Enter key
+                                        console.warn('Send button not found, using Enter key fallback...');
+                                        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13 }));
+                                    }
+                                }
                             } else {
-                                console.warn('Redo button not found. Falling back to full retry loop.');
+                                console.warn('Could not find input area for moderation retry.');
                             }
 
                             // Decrement attempt to not count against crash retries
