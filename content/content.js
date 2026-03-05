@@ -470,56 +470,13 @@ if (window.GrokLoopInjected) {
     }
 
     async function simulateClick(element) {
-        if (!element) {
-            console.warn('[simulateClick] No element provided');
-            return;
-        }
-
-        console.log('[simulateClick] Clicking element:', element.tagName, element.className?.substring(0, 50), element.ariaLabel);
-
-        const mouseOpts = { bubbles: true, cancelable: true, view: window };
-        const pointerOpts = { bubbles: true, cancelable: true, view: window, pointerId: 1, isPrimary: true, button: 0 };
-
-        // 1. Move to element (hover)
-        element.dispatchEvent(new MouseEvent('mouseover', mouseOpts));
-        element.dispatchEvent(new MouseEvent('mouseenter', mouseOpts));
-
-        // Reduced hover time for speed
-        await new Promise(r => setTimeout(r, Math.random() * 100 + 50));
-
-        // 2. Down
-        element.dispatchEvent(new MouseEvent('mousedown', mouseOpts));
+        if (!element) return;
+        
+        // Simple native click - this is what works in browser console tests
         element.focus();
-        try { element.dispatchEvent(new PointerEvent('pointerdown', pointerOpts)); } catch (e) { }
-
-        // Hold time
-        await new Promise(r => setTimeout(r, Math.random() * 50 + 20));
-
-        // 3. Up & Click
-        element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
-        try { element.dispatchEvent(new PointerEvent('pointerup', pointerOpts)); } catch (e) { }
-        
-        // Native click
+        await new Promise(r => setTimeout(r, 50));
         element.click();
-        
-        // FIX: Also try to invoke React's onClick handler directly
-        try {
-            const reactKey = Object.keys(element).find(key => key.startsWith('__reactProps$'));
-            if (reactKey) {
-                const props = element[reactKey];
-                if (props && typeof props.onClick === 'function') {
-                    console.log('[simulateClick] Found React onClick handler, invoking directly...');
-                    props.onClick(new MouseEvent('click', mouseOpts));
-                }
-            }
-        } catch (e) {
-            console.log('[simulateClick] React handler invocation failed:', e.message);
-        }
-        
-        // Additional click event for good measure (some apps listen for this)
         element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-        
-        console.log('[simulateClick] Click sequence complete');
     }
 
     async function simulateEnterKey(element) {
@@ -788,24 +745,30 @@ if (window.GrokLoopInjected) {
             });
 
             if (sendBtn) {
-                if (!sendBtn.disabled && !sendBtn.classList.contains('disabled')) {
-                    console.log('Found enabled Send button. Clicking humanly...', sendBtn.tagName, sendBtn.className, sendBtn.ariaLabel);
+                // Check multiple disabled states (React uses various methods)
+                const isDisabled = sendBtn.disabled || 
+                                   sendBtn.classList.contains('disabled') || 
+                                   sendBtn.classList.contains('pointer-events-none') ||
+                                   sendBtn.getAttribute('aria-disabled') === 'true' ||
+                                   sendBtn.getAttribute('disabled') !== null ||
+                                   (sendBtn.style.pointerEvents === 'none');
+                
+                if (!isDisabled) {
+                    console.log('Found enabled Send button. Clicking...', sendBtn.tagName, sendBtn.ariaLabel);
                     
-                    // FIX: For React apps, we need to ensure proper event firing
-                    // First, focus the button
+                    // FIX: Just use simple native click - no complex simulation
+                    // React handles native clicks fine when the element is properly bound
                     sendBtn.focus();
-                    await new Promise(r => setTimeout(r, 100));
+                    await new Promise(r => setTimeout(r, 50));
                     
-                    // If the button contains an SVG (arrow icon), click the SVG too
-                    const svgInside = sendBtn.querySelector('svg');
-                    if (svgInside) {
-                        console.log('Button contains SVG, clicking both button and SVG...');
-                        await simulateClick(sendBtn);
-                        await new Promise(r => setTimeout(r, 200));
-                        svgInside.click();
-                    } else {
-                        await simulateClick(sendBtn);
-                    }
+                    // Simple native click - this is what works in browser console
+                    sendBtn.click();
+                    
+                    // Also dispatch a click event for good measure
+                    sendBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+                    
+                    console.log('Click dispatched, waiting for generation to start...');
+                    await new Promise(r => setTimeout(r, 1500));
                     
                     // Verify the click worked - check if input was cleared or generation started
                     await new Promise(r => setTimeout(r, 1000));
