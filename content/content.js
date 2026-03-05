@@ -1138,6 +1138,67 @@ if (window.GrokLoopInjected) {
                 }
             }
 
+            // NEW (March 2026): If we found a "More options" menu button, try to expand it and search inside
+            if (menuBtns.length > 0) {
+                console.log(`[Upscale] Found ${menuBtns.length} potential "More options" buttons`);
+                
+                for (let menuBtn of menuBtns) {
+                    // Check if menu is already expanded
+                    const isExpanded = menuBtn.getAttribute('aria-expanded') === 'true' || 
+                                       menuBtn.closest('[role="menu"]:not([hidden])') ||
+                                       document.querySelector('[role="menu"]:not([hidden]) [role="menuitem"]');
+                    
+                    if (isExpanded) {
+                        console.log('[Upscale] Menu already expanded, searching inside...');
+                        const menu = document.querySelector('[role="menu"]:not([hidden])') || menuBtn.parentElement;
+                        upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, menu);
+                        
+                        if (!upscaleBtn) {
+                            // Also check for HD in menu
+                            const menuHdBtn = Array.from(menu.querySelectorAll('button, div[role="menuitem"], div[role="option"]')).find(b => {
+                                const text = (b.innerText || b.ariaLabel || b.title || '').trim().toLowerCase();
+                                return text === 'hd' || text.includes('high definition') || text.includes('enhance');
+                            });
+                            if (menuHdBtn) {
+                                console.log('[Upscale] Found HD in expanded menu');
+                                upscaleBtn = menuHdBtn;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Menu not expanded - try to click it
+                        console.log('[Upscale] Menu not expanded, attempting to click "More options"...');
+                        try {
+                            await simulateClick(menuBtn);
+                            await new Promise(r => setTimeout(r, 500)); // Wait for menu animation
+                            
+                            // Now search inside the expanded menu
+                            const menu = document.querySelector('[role="menu"]:not([hidden])') || menuBtn.parentElement;
+                            if (menu) {
+                                console.log('[Upscale] Menu expanded, searching inside...');
+                                upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, menu);
+                                
+                                if (!upscaleBtn) {
+                                    const menuHdBtn = Array.from(menu.querySelectorAll('button, div[role="menuitem"], div[role="option"]')).find(b => {
+                                        const text = (b.innerText || b.ariaLabel || b.title || '').trim().toLowerCase();
+                                        return text === 'hd' || text.includes('high definition') || text.includes('enhance');
+                                    });
+                                    if (menuHdBtn) {
+                                        console.log('[Upscale] Found HD in menu after clicking');
+                                        upscaleBtn = menuHdBtn;
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('[Upscale] Failed to click menu:', e);
+                        }
+                    }
+                    
+                    if (upscaleBtn) break;
+                }
+            }
+
             // Deduplicate
             menuBtns = [...new Set(menuBtns)];
 
