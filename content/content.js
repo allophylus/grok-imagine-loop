@@ -470,7 +470,12 @@ if (window.GrokLoopInjected) {
     }
 
     async function simulateClick(element) {
-        if (!element) return;
+        if (!element) {
+            console.warn('[simulateClick] No element provided');
+            return;
+        }
+
+        console.log('[simulateClick] Clicking element:', element.tagName, element.className?.substring(0, 50), element.ariaLabel);
 
         const mouseOpts = { bubbles: true, cancelable: true, view: window };
         const pointerOpts = { bubbles: true, cancelable: true, view: window, pointerId: 1, isPrimary: true, button: 0 };
@@ -493,7 +498,28 @@ if (window.GrokLoopInjected) {
         // 3. Up & Click
         element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
         try { element.dispatchEvent(new PointerEvent('pointerup', pointerOpts)); } catch (e) { }
+        
+        // Native click
         element.click();
+        
+        // FIX: Also try to invoke React's onClick handler directly
+        try {
+            const reactKey = Object.keys(element).find(key => key.startsWith('__reactProps$'));
+            if (reactKey) {
+                const props = element[reactKey];
+                if (props && typeof props.onClick === 'function') {
+                    console.log('[simulateClick] Found React onClick handler, invoking directly...');
+                    props.onClick(new MouseEvent('click', mouseOpts));
+                }
+            }
+        } catch (e) {
+            console.log('[simulateClick] React handler invocation failed:', e.message);
+        }
+        
+        // Additional click event for good measure (some apps listen for this)
+        element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+        
+        console.log('[simulateClick] Click sequence complete');
     }
 
     async function simulateEnterKey(element) {
