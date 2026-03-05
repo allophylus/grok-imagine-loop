@@ -930,21 +930,25 @@ if (window.GrokLoopInjected) {
                 }
 
                 // NEW: Check for "Regenerate" / "Redo video" buttons that appear after moderation
-                const regenerateBtn = Array.from(document.querySelectorAll('button, div[role="button"]')).find(b => {
-                    if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
-                    if (b.offsetParent === null) return false;
-                    const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
-                    // Look for regenerate/redo buttons that appear AFTER generation attempt
-                    return TRANSLATIONS.regenerate.some(k => text.includes(k) && text.length < 30);
-                });
+                // IMPORTANT: Only trigger if NO video exists (otherwise it's just a normal "Redo" option)
+                const hasAnyVideo = document.querySelectorAll('video').length > 0;
+                const hasCompletedImage = document.querySelectorAll('img[src*="blob:"], img[src*="grok"]').length > 0;
+                
+                if (!hasAnyVideo && !hasCompletedImage) {
+                    const regenerateBtn = Array.from(document.querySelectorAll('button, div[role="button"]')).find(b => {
+                        if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
+                        if (b.offsetParent === null) return false;
+                        const text = (b.innerText || b.ariaLabel || b.title || '').toLowerCase();
+                        // Look for regenerate/redo buttons that appear AFTER failed generation
+                        return TRANSLATIONS.regenerate.some(k => text.includes(k) && text.length < 30);
+                    });
 
-                if (regenerateBtn && !existingVideos.has('moderation-detected')) {
-                    console.warn('Regenerate button found - likely moderation');
-                    // Mark as moderation to prevent infinite loop
-                    existingVideos.add('moderation-detected');
-                    cleanup();
-                    reject(new Error('Content Moderated (Regenerate Button)'));
-                    return;
+                    if (regenerateBtn) {
+                        console.warn('Regenerate button found WITHOUT video/image - likely moderation');
+                        cleanup();
+                        reject(new Error('Content Moderated (Regenerate Button)'));
+                        return;
+                    }
                 }
 
                 // Check for "Broken Eye" Generation Failure icon
