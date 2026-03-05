@@ -198,30 +198,30 @@ if (window.GrokLoopInjected) {
             'контент модерується' // Ukrainian
         ],
         upscale: [
-            'upscale', 'enhance', 'hd', 'alta definizione', 'high definition', // English & generic
+            'upscale', 'enhance', 'hd', 'high definition', 'alta definizione', // English & generic
             'escalar', 'mejorar vídeo', 'mejorar video', 'optimizar', // Spanish
             'rehausser', 'améliorer la vidéo', 'améliorer', 'optimiser', // French
             'hochskalieren', 'verbessern', 'optimieren', // German
-            '放大', '增强', '升级', '超分', '优化', // Chinese (Simplified)
-            '升級', '升級影片', // Chinese (Traditional)
-            'アップスケール', '高画質化', '強化', '改善', // Japanese
-            'улучшить', 'масштабировать', 'оптимизировать', // Russian
-            'melhorar', 'otimizar', // Portuguese
-            'iyileştir', // Turkish
-            'tingkatkan', // Indonesian
-            'opschalen', // Dutch
-            'migliora', 'ottimizza video', // Italian
-            'skaluj', 'ulepsz', // Polish
-            'îmbunătățește', // Romanian
-            'uppskala', // Swedish
-            'nâng cấp', // Vietnamese
-            'zvětšit', 'vylepšit', // Czech
-            'javítás', 'felskálázás', // Hungarian
-            'تحسين', // Arabic
-            'ارتقا', // Persian
-            'pabutihin', // Filipino
-            '업스케일', '향상', // Korean
-            'sudhare', // Hindi
+            '放大', '增强', '升级', '超分', '优化', '高清', // Chinese (Simplified)
+            '升級', '升級影片', '高清', // Chinese (Traditional)
+            'アップスケール', '高画質化', '強化', '改善', 'ハイビジョン', // Japanese
+            'улучшить', 'масштабировать', 'оптимизировать', 'hd', // Russian
+            'melhorar', 'otimizar', 'alta definição', // Portuguese
+            'iyileştir', 'hd', // Turkish
+            'tingkatkan', 'hd', // Indonesian
+            'opschalen', 'hd', // Dutch
+            'migliora', 'ottimizza video', 'alta definizione', // Italian
+            'skaluj', 'ulepsz', 'hd', // Polish
+            'îmbunătățește', 'hd', // Romanian
+            'uppskala', 'hd', // Swedish
+            'nâng cấp', 'hd', // Vietnamese
+            'zvětšit', 'vylepšit', 'hd', // Czech
+            'javítás', 'felskálázás', 'hd', // Hungarian
+            'تحسين', 'hd', // Arabic
+            'ارتقا', 'hd', // Persian
+            'pabutihin', 'hd', // Filipino
+            '업스케일', '향상', 'hd', // Korean
+            'sudhare', 'hd', // Hindi
             'unnoto', // Bengali
             'vadhva', // Marathi
             'mempat', // Tamil
@@ -965,6 +965,22 @@ if (window.GrokLoopInjected) {
         // 1. Try finding 'Upscale' directly via translations (maybe it's already visible)
         console.log('Searching for Upscale button directly...');
         upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
+
+        // NEW (March 2026): Check for standalone "HD" button (new Grok UI)
+        if (!upscaleBtn) {
+            console.log('Upscale not found via translations. Checking for HD button (new UI)...');
+            const hdBtn = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).find(b => {
+                if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
+                if (b.offsetParent === null) return false;
+                const text = (b.innerText || b.ariaLabel || b.title || '').trim().toLowerCase();
+                // Look for standalone "HD" button (not part of other text)
+                return text === 'hd' || (text.length <= 4 && text.includes('hd'));
+            });
+            if (hdBtn) {
+                console.log('[Upscale] Found HD button in new UI');
+                upscaleBtn = hdBtn;
+            }
+        }
 
         if (!upscaleBtn) {
             console.log('Upscale button not found directly. Checking menus...');
