@@ -930,11 +930,17 @@ if (window.GrokLoopInjected) {
                 }
 
                 // NEW: Check for "Regenerate" / "Redo video" buttons that appear after moderation
-                // IMPORTANT: Only trigger if NO video exists (otherwise it's just a normal "Redo" option)
+                // CRITICAL FIX: Only trigger moderation if NO content exists
                 const hasAnyVideo = document.querySelectorAll('video').length > 0;
-                const hasCompletedImage = document.querySelectorAll('img[src*="blob:"], img[src*="grok"]').length > 0;
+                const hasCompletedImage = document.querySelectorAll('img[src*="blob:"], img[src*="grok"], img[src*="imagine"]').length > 0;
+                const hasAnyContent = hasAnyVideo || hasCompletedImage;
                 
-                if (!hasAnyVideo && !hasCompletedImage) {
+                // If content exists, regenerate button is NORMAL (user can regenerate if they don't like it)
+                if (hasAnyContent) {
+                    console.log('Content detected - regenerate button is normal, NOT moderation');
+                    // Do NOT trigger moderation
+                } else {
+                    // No content + regenerate button = likely moderation
                     const regenerateBtn = Array.from(document.querySelectorAll('button, div[role="button"]')).find(b => {
                         if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
                         if (b.offsetParent === null) return false;
@@ -944,7 +950,7 @@ if (window.GrokLoopInjected) {
                     });
 
                     if (regenerateBtn) {
-                        console.warn('Regenerate button found WITHOUT video/image - likely moderation');
+                        console.warn('Regenerate button found WITHOUT content - likely moderation');
                         cleanup();
                         reject(new Error('Content Moderated (Regenerate Button)'));
                         return;
