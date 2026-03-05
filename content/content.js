@@ -419,6 +419,7 @@ if (window.GrokLoopInjected) {
     // Renamed/Refactored for speed per user request ("Copy and Paste")
     async function insertTextFast(element, text) {
         element.focus();
+        console.log('[insertTextFast] Target element:', element.tagName, 'isContentEditable:', element.isContentEditable, 'Text length:', text.length);
 
         // Clear and Replace Strategy
         if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
@@ -449,9 +450,21 @@ if (window.GrokLoopInjected) {
             } else {
                 element.value = text;
             }
+            
+            // Dispatch ALL the events React might be listening for
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
+            element.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, data: text }));
+            element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'a', keyCode: 65 }));
+            element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a', keyCode: 65 }));
+        } else {
+            // For contentEditable, also dispatch input event
+            element.dispatchEvent(new Event('input', { bubbles: true }));
         }
+
+        // Verify text was inserted
+        const actualText = element.value || element.textContent || '';
+        console.log('[insertTextFast] Verification - Expected:', text.substring(0, 30) + '...', 'Actual:', actualText.substring(0, 30) + '...', 'Match:', actualText.includes(text.substring(0, 20)));
 
         await new Promise(r => setTimeout(r, 100)); // Short settle time
     }
@@ -745,8 +758,39 @@ if (window.GrokLoopInjected) {
 
             if (sendBtn) {
                 if (!sendBtn.disabled && !sendBtn.classList.contains('disabled')) {
-                    console.log('Found enabled Send button. Clicking humanly...');
-                    await simulateClick(sendBtn);
+                    console.log('Found enabled Send button. Clicking humanly...', sendBtn.tagName, sendBtn.className, sendBtn.ariaLabel);
+                    
+                    // FIX: For React apps, we need to ensure proper event firing
+                    // First, focus the button
+                    sendBtn.focus();
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    // If the button contains an SVG (arrow icon), click the SVG too
+                    const svgInside = sendBtn.querySelector('svg');
+                    if (svgInside) {
+                        console.log('Button contains SVG, clicking both button and SVG...');
+                        await simulateClick(sendBtn);
+                        await new Promise(r => setTimeout(r, 200));
+                        svgInside.click();
+                    } else {
+                        await simulateClick(sendBtn);
+                    }
+                    
+                    // Verify the click worked - check if input was cleared or generation started
+                    await new Promise(r => setTimeout(r, 1000));
+                    const inputStillHasText = inputArea && (inputArea.value || inputArea.textContent || '').trim().length > 0;
+                    const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
+                    
+                    if (inputStillHasText && !generationStarted) {
+                        console.warn('Send click did not trigger generation! Input still has text. Trying Enter key fallback...');
+                        // Fallback: Enter key with proper events
+                        inputArea.focus();
+                        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                        inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                    } else {
+                        console.log('Send button click successful - generation should be starting...');
+                    }
+                    
                     return;
                 }
             }
