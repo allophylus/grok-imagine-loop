@@ -470,40 +470,9 @@ if (window.GrokLoopInjected) {
     }
 
     async function simulateClick(element) {
-        if (!element) {
-            console.warn('[simulateClick] No element provided');
-            return;
-        }
-        
-        console.log('[simulateClick] Clicking:', element.tagName, element.ariaLabel);
-        
-        // FIX: Content script events don't propagate to React properly.
-        // Inject a script into the page context to perform the click.
-        try {
-            const script = document.createElement('script');
-            script.textContent = `
-                (function() {
-                    var btn = document.querySelector('button[type="submit"]:not([disabled]), button[aria-label*="submit" i]:not([disabled])');
-                    if (btn) {
-                        btn.focus();
-                        btn.click();
-                        console.log('[Injected] Click dispatched on', btn.tagName, btn.ariaLabel);
-                    } else {
-                        console.warn('[Injected] Submit button not found');
-                    }
-                })();
-            `;
-            (document.head || document.documentElement).appendChild(script);
-            script.remove();
-            console.log('[simulateClick] Injected click script');
-        } catch (e) {
-            console.warn('[simulateClick] Injection failed, using fallback:', e.message);
-            // Fallback: direct click
-            element.focus();
-            element.click();
-        }
-        
-        await new Promise(r => setTimeout(r, 100));
+        if (!element) return;
+        element.focus();
+        element.click();
     }
 
     async function simulateEnterKey(element) {
@@ -739,55 +708,57 @@ if (window.GrokLoopInjected) {
             throw new Error('Strict Mode: Enter Key Submission Failed. (Button fallback disabled)');
         }
 
-        // OPTION B: LEGACY/DEFAULT - Use Enter Key (most reliable for React apps)
-        console.log('Submitting via Enter Key (most reliable for React)...');
-        
-        // Focus the input and send Enter key - React handles this reliably
-        inputArea.focus();
-        await new Promise(r => setTimeout(r, 100));
-        
-        // Send Enter key with full event sequence
-        const enterDown = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 });
-        const enterPress = new KeyboardEvent('keypress', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13, charCode: 13 });
-        const enterUp = new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 });
-        
-        inputArea.dispatchEvent(enterDown);
-        inputArea.dispatchEvent(enterPress);
-        inputArea.dispatchEvent(enterUp);
-        
-        console.log('Enter key dispatched, waiting for generation...');
-        await new Promise(r => setTimeout(r, 2000));
-        
-        // Verify generation started
-        const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
-        
-        if (!generationStarted) {
-            console.warn('Enter key did not trigger generation! Trying button click fallback...');
+        // OPTION B: LEGACY/DEFAULT - Button click (was working, keep it)
+        console.log('Legacy Mode: Searching for Send button...');
+
+        let sendBtn = null;
+
+        for (let i = 0; i < 20; i++) {
+            // Find SVG arrow path, climb up to parent button
+            const arrowPaths = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
             
-            // Fallback: Find and click the button
-            for (let i = 0; i < 10; i++) {
-                const arrowPaths = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
-                let sendBtn = null;
-                
-                for (const path of arrowPaths) {
-                    const svg = path.closest('svg');
-                    if (svg) {
-                        sendBtn = svg.closest('button[type="submit"]');
-                        if (sendBtn && !sendBtn.disabled) break;
-                    }
+            for (const path of arrowPaths) {
+                const svg = path.closest('svg');
+                if (svg) {
+                    sendBtn = svg.closest('button[type="submit"]');
+                    if (sendBtn && !sendBtn.disabled) break;
                 }
-                
-                if (sendBtn && !sendBtn.disabled) {
-                    console.log('Fallback: Clicking button...', sendBtn.ariaLabel);
-                    sendBtn.click();
-                    await new Promise(r => setTimeout(r, 1500));
-                    break;
-                }
-                await new Promise(r => setTimeout(r, 300));
             }
-        } else {
-            console.log('Enter key successful - generation started!');
+            
+            // Fallback: aria-label match
+            if (!sendBtn) {
+                sendBtn = document.querySelector('button[aria-label*="submit" i]:not([disabled]), button[aria-label*="send" i]:not([disabled])');
+            }
+
+            if (sendBtn && !sendBtn.disabled) {
+                console.log('Found enabled Send button. Clicking...', sendBtn.tagName, sendBtn.ariaLabel);
+                
+                // Wait for React to bind handler
+                await new Promise(r => setTimeout(r, 300));
+                
+                // Simple native click
+                sendBtn.focus();
+                sendBtn.click();
+                
+                console.log('Click dispatched, waiting for generation...');
+                await new Promise(r => setTimeout(r, 2000));
+                
+                // Verify
+                const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
+                if (!generationStarted) {
+                    console.warn('Click did not trigger! Trying Enter fallback...');
+                    inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                } else {
+                    console.log('Send button click successful!');
+                }
+                return;
+            }
+            await new Promise(r => setTimeout(r, 500));
         }
+
+        // Fallback: Enter key
+        console.warn('Button not found, using Enter key...');
+        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, keyCode: 13, key: 'Enter' }));
     }
 
     async function clearInputAttachments() {
@@ -2425,13 +2396,14 @@ if (window.GrokLoopInjected) {
                                             .find(b => !b.disabled && b.offsetParent !== null);
                                     }
                                     
-                                    // Use Enter key - most reliable for React
-                                    console.log('Submitting via Enter key after moderation retry...');
-                                    inputArea.focus();
-                                    inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
-                                    inputArea.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13, charCode: 13 }));
-                                    inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
-                                    console.log('Enter key dispatched for moderation retry');
+                                    // Use button click (same as main submission)
+                                    console.log('Clicking send button after moderation retry...');
+                                    if (sendBtn) {
+                                        await simulateClick(sendBtn);
+                                    } else {
+                                        // Fallback: Enter key
+                                        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                                    }
                                 }
                             } else {
                                 console.warn('Could not find input area for moderation retry.');
