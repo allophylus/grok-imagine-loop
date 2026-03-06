@@ -756,33 +756,40 @@ if (window.GrokLoopInjected) {
                 if (!isDisabled) {
                     console.log('Found enabled Send button. Clicking...', sendBtn.tagName, sendBtn.ariaLabel);
                     
-                    // FIX: Just use simple native click - no complex simulation
-                    // React handles native clicks fine when the element is properly bound
-                    sendBtn.focus();
-                    await new Promise(r => setTimeout(r, 50));
+                    // FIX: Wait for React to fully bind the click handler
+                    // Grok's button might appear enabled but React handler isn't ready yet
+                    await new Promise(r => setTimeout(r, 300));
                     
-                    // Simple native click - this is what works in browser console
-                    sendBtn.click();
+                    // Re-verify button is still enabled (React might have changed state)
+                    const stillEnabled = !sendBtn.disabled && 
+                                         !sendBtn.classList.contains('disabled') &&
+                                         sendBtn.getAttribute('aria-disabled') !== 'true' &&
+                                         sendBtn.offsetParent !== null;
                     
-                    // Also dispatch a click event for good measure
-                    sendBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-                    
-                    console.log('Click dispatched, waiting for generation to start...');
-                    await new Promise(r => setTimeout(r, 1500));
-                    
-                    // Verify the click worked - check if input was cleared or generation started
-                    await new Promise(r => setTimeout(r, 1000));
-                    const inputStillHasText = inputArea && (inputArea.value || inputArea.textContent || '').trim().length > 0;
-                    const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
-                    
-                    if (inputStillHasText && !generationStarted) {
-                        console.warn('Send click did not trigger generation! Input still has text. Trying Enter key fallback...');
-                        // Fallback: Enter key with proper events
-                        inputArea.focus();
-                        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
-                        inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                    if (stillEnabled) {
+                        // Simple native click - this is what works in browser console
+                        sendBtn.focus();
+                        await new Promise(r => setTimeout(r, 50));
+                        sendBtn.click();
+                        sendBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+                        
+                        console.log('Click dispatched, waiting for generation to start...');
+                        await new Promise(r => setTimeout(r, 2000));
+                        
+                        // Verify the click worked
+                        const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
+                        
+                        if (!generationStarted) {
+                            console.warn('Click did not trigger generation! Trying Enter key fallback...');
+                            inputArea.focus();
+                            inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                            inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                            await new Promise(r => setTimeout(r, 1000));
+                        } else {
+                            console.log('Send button click successful - generation started!');
+                        }
                     } else {
-                        console.log('Send button click successful - generation should be starting...');
+                        console.warn('Button became disabled before click. Retrying...');
                     }
                     
                     return;
