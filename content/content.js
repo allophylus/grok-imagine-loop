@@ -2343,67 +2343,32 @@ if (window.GrokLoopInjected) {
                                 }
                                 await new Promise(r => setTimeout(r, 1000)); // Wait for cards to disappear
                             } else {
-                                // Alternative: Navigate away and back to reset state
-                                console.log('No close buttons found, navigating to reset UI state...');
-                                window.location.href = 'https://grok.com/imagine';
-                                await new Promise(r => setTimeout(r, 3000)); // Wait for page reload
+                                // FIX: Don't navigate - loses extension state. Just clear input and retry.
+                                console.log('No close buttons found, clearing input and retrying...');
                             }
 
-                            // Step 2: Re-submit the prompt
-                            console.log('Re-submitting prompt after moderation (full retry)...');
+                            // Re-submit without navigating
+                            console.log('Re-submitting prompt after moderation...');
                             
-                            // Find the input area
                             const inputArea = document.querySelector('textarea[placeholder*="imagine"], textarea[placeholder*="Type"], div[contenteditable="true"]');
                             if (inputArea) {
-                                // Clear existing content
                                 inputArea.textContent = '';
                                 inputArea.value = '';
                                 
-                                // Re-insert the prompt
                                 const currentSegment = state.loopData.segments[index];
                                 const promptText = currentSegment ? currentSegment.prompt : '';
                                 
                                 if (promptText) {
                                     console.log('Re-inserting prompt:', promptText.substring(0, 50) + '...');
                                     await insertTextFast(inputArea, promptText);
-                                    await new Promise(r => setTimeout(r, 1000)); // Longer wait for UI to settle
+                                    await new Promise(r => setTimeout(r, 800));
                                     
-                                    // Find and click send button - use multiple strategies
-                                    let sendBtn = null;
-                                    
-                                    // Strategy 1: Find SVG arrow path, climb up to parent button
-                                    const arrowPaths = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
-                                    for (const path of arrowPaths) {
-                                        const svg = path.closest('svg');
-                                        if (!svg) continue;
-                                        // Always prefer the parent button
-                                        const btn = svg.closest('button[type="submit"], button[aria-label*="submit" i], button[aria-label*="send" i]');
-                                        if (btn && !btn.disabled && btn.offsetParent !== null) {
-                                            sendBtn = btn;
-                                            console.log('Found send button via SVG arrow:', btn.tagName, btn.ariaLabel);
-                                            break;
-                                        }
-                                    }
-                                    
-                                    // Strategy 2: Submit type button
-                                    if (!sendBtn) {
-                                        sendBtn = document.querySelector('button[type="submit"]:not([disabled])');
-                                    }
-                                    
-                                    // Strategy 3: Aria-label match
-                                    if (!sendBtn) {
-                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="submit" i], button[aria-label*="send" i]'))
-                                            .find(b => !b.disabled && b.offsetParent !== null);
-                                    }
-                                    
-                                    // Use button click (same as main submission)
-                                    console.log('Clicking send button after moderation retry...');
-                                    if (sendBtn) {
-                                        await simulateClick(sendBtn);
-                                    } else {
-                                        // Fallback: Enter key
-                                        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
-                                    }
+                                    // Use Enter key - more reliable than button click
+                                    console.log('Submitting via Enter key...');
+                                    inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                                    inputArea.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13, charCode: 13 }));
+                                    inputArea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
+                                    console.log('Enter key dispatched for moderation retry');
                                 }
                             } else {
                                 console.warn('Could not find input area for moderation retry.');
