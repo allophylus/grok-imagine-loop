@@ -718,31 +718,30 @@ if (window.GrokLoopInjected) {
         let sendBtn = null;
 
         for (let i = 0; i < 20; i++) {
-            // FIX: Grok uses <div> elements for buttons, not just <button>
-            // Search for both button AND clickable div elements
-            const buttons = Array.from(document.querySelectorAll('button, div[role="button"], div[class*="flex"][class*="items-center"]'));
-            sendBtn = buttons.find(b => {
-                // EXCLUSION: Ignore buttons in Sidebar/Nav
-                if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
-
-                const label = (b.textContent || b.ariaLabel || b.title || '').trim().toLowerCase();
-
-                // Multi-Language Match
-                const isSend = TRANSLATIONS.send.some(k => label === k || label.includes(k));
-                const isMakeVideo = TRANSLATIONS.makeVideo.some(k => label === k || label.includes(k));
-
-                // NEW (March 2026): Check for arrow/send icon in SVG
-                // FIX: Also check the SVG path data for the up-arrow pattern (M6 11L12 5 = upward arrow)
-                const svg = b.querySelector('svg');
-                const svgPath = svg?.querySelector('path')?.getAttribute('d') || '';
-                const hasUpArrow = svgPath.includes('M6 11L12 5') || svgPath.includes('M12 5L18 11') || svgPath.includes('M12 5V19');
-                const hasSendIcon = hasUpArrow || b.querySelector('svg path[d*="arrow"], svg[data-icon*="send"], svg[aria-label*="send"]');
+            // FIX: Grok's send button is a <button> containing a <div> containing an <svg>
+            // We need to find the SVG arrow first, then climb up to the actual <button>
+            const arrowSvgs = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
+            
+            for (const svgPath of arrowSvgs) {
+                const svg = svgPath.closest('svg');
+                if (!svg) continue;
                 
-                // NEW: Check for upload arrow (↑) commonly used for send
-                const isArrowButton = svg && (label.includes('send') || label.includes('generate') || label.includes('imagine'));
-
-                return isSend || isMakeVideo || hasSendIcon || isArrowButton;
-            });
+                // Climb up to find the parent button (skip intermediate divs)
+                const parentBtn = svg.closest('button[type="submit"], button[aria-label*="submit" i], button[aria-label*="send" i]');
+                if (parentBtn) {
+                    sendBtn = parentBtn;
+                    break;
+                }
+                
+                // Fallback: use the div or svg itself
+                sendBtn = svg.closest('div[role="button"]') || svg.closest('div') || svg;
+                if (sendBtn) break;
+            }
+            
+            // Fallback: search by aria-label
+            if (!sendBtn) {
+                sendBtn = document.querySelector('button[aria-label*="submit" i], button[aria-label*="send" i]');
+            }
 
             if (sendBtn) {
                 // Check multiple disabled states (React uses various methods)
@@ -2412,20 +2411,17 @@ if (window.GrokLoopInjected) {
                                     // Find and click send button - use multiple strategies
                                     let sendBtn = null;
                                     
-                                    // Strategy 1: Arrow-up icon button (FIX: Also check div elements, not just button)
-                                    // The Grok send button is a div with SVG containing path: M6 11L12 5M12 5L18 11M12 5V19
-                                    const arrowBtns = Array.from(document.querySelectorAll('button svg, div svg, div[role="button"] svg'));
-                                    for (const svg of arrowBtns) {
-                                        const path = svg.querySelector('path');
-                                        const pathData = path?.getAttribute('d') || '';
-                                        // Check for the up-arrow pattern
-                                        if (pathData.includes('M6 11L12 5') || pathData.includes('M12 5L18 11') || pathData.includes('M12 5V19')) {
-                                            const btn = svg.closest('button, div[role="button"], div');
-                                            if (btn && btn.offsetParent !== null) {
-                                                sendBtn = btn;
-                                                console.log('Found send button via SVG arrow path:', btn.tagName, btn.className?.substring(0, 50));
-                                                break;
-                                            }
+                                    // Strategy 1: Find SVG arrow path, climb up to parent button
+                                    const arrowPaths = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
+                                    for (const path of arrowPaths) {
+                                        const svg = path.closest('svg');
+                                        if (!svg) continue;
+                                        // Always prefer the parent button
+                                        const btn = svg.closest('button[type="submit"], button[aria-label*="submit" i], button[aria-label*="send" i]');
+                                        if (btn && !btn.disabled && btn.offsetParent !== null) {
+                                            sendBtn = btn;
+                                            console.log('Found send button via SVG arrow:', btn.tagName, btn.ariaLabel);
+                                            break;
                                         }
                                     }
                                     
@@ -2434,10 +2430,10 @@ if (window.GrokLoopInjected) {
                                         sendBtn = document.querySelector('button[type="submit"]:not([disabled])');
                                     }
                                     
-                                    // Strategy 3: Aria-label match (also check divs)
+                                    // Strategy 3: Aria-label match
                                     if (!sendBtn) {
-                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="send" i], button[aria-label*="generate" i], button[aria-label*="imagine" i], div[aria-label*="send" i], div[aria-label*="generate" i]'))
-                                            .find(b => b.offsetParent !== null);
+                                        sendBtn = Array.from(document.querySelectorAll('button[aria-label*="submit" i], button[aria-label*="send" i]'))
+                                            .find(b => !b.disabled && b.offsetParent !== null);
                                     }
                                     
                                     if (sendBtn) {
