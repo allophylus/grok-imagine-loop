@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const upscaleInput = document.getElementById('upscale');
     const resetInputsBtn = document.getElementById('resetInputsBtn');
     const filenamePrefixInput = document.getElementById('filenamePrefix');
+    const useExtendInput = document.getElementById('useExtend');
     const statusDiv = document.getElementById('status');
     const versionSpan = document.getElementById('version');
 
@@ -159,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const timestamp = new Date().toLocaleTimeString();
 
-        // Truncate long messages to prevent UI lag/spam
         const textArgs = args.map(a => {
             let str;
             if (typeof a === 'object') {
@@ -167,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 str = String(a);
             }
-            if (str.length > 200) return str.substring(0, 200) + '...';
             return str;
         }).join(' ');
 
@@ -791,7 +790,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showDebugLogs: showDebugLogsInput.checked,
             birthYear: birthYearInput.value,
             globalPrompt: globalPromptInput.value,
-            filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : ''
+            filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : '',
+            useExtend: useExtendInput ? useExtendInput.checked : false
         };
         chrome.storage.local.set({ 'grokLoopConfig': config });
     }
@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach Config Listeners
     // const pauseOnErrorInput = document.getElementById('pauseOnError'); // Moved to top
-    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, filenamePrefixInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
+    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, filenamePrefixInput, useExtendInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
         if (el) {
             el.addEventListener('input', saveConfigs);
             el.addEventListener('change', saveConfigs);
@@ -902,6 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (c.birthYear) birthYearInput.value = c.birthYear;
             if (c.globalPrompt) globalPromptInput.value = c.globalPrompt;
             if (c.filenamePrefix !== undefined && filenamePrefixInput) filenamePrefixInput.value = c.filenamePrefix;
+            if (c.useExtend !== undefined && useExtendInput) useExtendInput.checked = c.useExtend;
 
             updateInitialImageLabel(); // Sync label on load
             if (c.birthYear) birthYearInput.value = c.birthYear;
@@ -1190,6 +1191,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showDebugLogs: showDebugLogsInput.checked,
                 birthYear: birthYearInput.value || '2000',
                 globalPrompt: globalPromptInput.value || '',
+                filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : '',
+                useExtend: useExtendInput ? useExtendInput.checked : false,
 
                 // NEW Payload Structure
                 scenes: validScenes.map(s => ({

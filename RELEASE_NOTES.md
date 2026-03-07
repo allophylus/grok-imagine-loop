@@ -1,5 +1,38 @@
 # Release Notes - Grok Imagine Loop
 
+## v1.6.7
+- **Feature:** **Extend Mode**. New toggle in Settings to use Grok's native "Extend" feature for chaining video segments. When enabled, segments within each 5-segment window use the Extend button instead of extracting the last frame, resulting in smoother continuations and saving generation quota. The extension automatically falls back to last-frame extraction every 6th segment (or when Extend is unavailable).
+  - Rolling windows of 5: Segments 1→generate, 2-5→extend, 6→extract frame, 7-10→extend, etc.
+  - Upscaling is deferred to only the **last** segment in each extend window.
+  - Downloads only occur after the final extended (and optionally upscaled) segment.
+  - Extend compose area is kept intact — the extension no longer accidentally clicks the Video tab or "Make video" button after opening Extend.
+- **Fix:** **Zero-Byte Downloads**. Fixed a critical bug where all auto-downloaded videos were 0 bytes. The content script's `fetch()` was hitting CORS restrictions on `assets.grok.com`. Downloads now use the background script to fetch video data (which has proper `host_permissions`), then convert to a Blob in the content script for anchor-tag download (which preserves custom filenames).
+- **Fix:** **Filename Prefix**. Custom filename prefixes are now always applied correctly. Extend mode segments use a range format: `prefix_grok_loop_segment_1_5.mp4` (segments 1 through 5).
+- **Fix:** **Multiple Video Generation on Segment 2**. Fixed several issues causing duplicate/triple video generation:
+  - Proactive frame extraction no longer pre-populates `seg.inputImage` for segments that will use Extend.
+  - The retry loop now correctly breaks (not continues) after a successful extend segment.
+  - The "Make Video" button priority is skipped in Extend mode to prevent creating standalone videos.
+- **Fix:** **Upscale Regression (SVG Search Leak)**. Constrained the Send button's SVG arrow search to the compose area, preventing accidental clicks on Upscale or other toolbar buttons.
+- **Fix:** **Image Upload Reverting to Image Mode**. Moved Video mode activation to occur *before* image uploads, ensuring the Video/Imagine tab is still visible and clickable.
+- **Fix:** **Menu Item Detection in Non-English Languages**. Rewrote the DOM search for both Upscale and Extend menu items. The previous "leaf node only" filter rejected menu items with child elements (e.g., `<div role="menuitem"><svg/><span>升级视频</span></div>`), causing detection to fail in Chinese, Russian, and other languages. Both searches now scan all visible elements and walk up to the closest clickable ancestor.
+- **Improvement:** **Verified Multi-Language Support**. Upscale and Extend translations have been verified against actual Grok UI screenshots for 11 languages (see table below).
+
+### Verified Language Support (Upscale & Extend)
+
+| Language | Upscale | Extend |
+|---|---|---|
+| 🇬🇧 English | Upscale video | Extend video |
+| 🇫🇷 French | Mise à niveau de la vidéo | Étendre la vidéo |
+| 🇩🇪 German | Video hochskalieren | Video erweitern |
+| 🇪🇸 Spanish | Mejorar video | Extender video |
+| 🇵🇹 Portuguese | Upscale vídeo | Estender vídeo |
+| 🇨🇳 Chinese (Simplified) | 升级视频 | 扩展视频 |
+| 🇹🇼 Chinese (Traditional) | 升級影片 | 擴展影片 |
+| 🇯🇵 Japanese | アップスケールビデオ | 動画を拡張 |
+| 🇸🇦 Arabic | ترقية الفيديو | تمديد الفيديو |
+| 🇨🇿 Czech | Zvětšit video | Rozšířit video |
+| 🇷🇺 Russian | Масштабирование видео | Продлить видео |
+
 ## v1.6.6
 - **Feature:** **Import & Export Configurations**. Added the ability to export your Saved Loops (including prompts, settings, and global images) to a JSON file and import them later for easy backups and sharing.
 - **Feature:** **Smart Resume Export**. When saving a configuration during an active run, any frames automatically extracted from your videos will also be included in the export. This lets you seamlessly pick up where you left off later!

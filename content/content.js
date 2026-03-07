@@ -16,33 +16,33 @@ if (window.GrokLoopInjected) {
     // --- Multi-Language Support ---
     const TRANSLATIONS = {
         send: [
-            'send', 'post', 'submit', // English
-            'enviar', 'publicar', // Spanish, Portuguese
-            'envoyer', 'publier', // French
-            'absenden', 'senden', 'veröffentlichen', // German
-            '发送', '发布', // Chinese (Simplified)
-            '發送', '發布', // Chinese (Traditional)
-            '送信', '投稿', // Japanese
-            'отправить', // Russian
-            'gönder', 'yayınla', // Turkish
-            'kirmizi', 'kirim', // Indonesian
-            'versturen', 'plaatsen', // Dutch
-            'invia', 'pubblica', // Italian
-            'wyslij', 'wyślij', 'opublikuj', // Polish
-            'trimitere', 'publica', // Romanian
-            'skicka', 'publicera', // Swedish
-            'gửi', 'đăng', // Vietnamese
-            'odeslat', 'zveřejnit', // Czech
-            'küldés', 'közzététel', // Hungarian
-            'إرسال', 'نشر', // Arabic
-            'ارسال', 'انتشار', // Persian (Farsi)
-            'bago', 'ipadala', // Filipino (Tagalog) - 'ipadala' = send
-            '보내기', '게시', // Korean
-            'भेजें', 'post', // Hindi
-            'পাঠান', 'post', // Bengali
-            'पाठवा', // Marathi
-            'அனுப்பு', // Tamil
-            'ப public', // Tamil (likely post/publish context dependent, keeping simple)
+            'send', 'post', 'submit', 'generate', 'create', 'imagine', // English
+            'enviar', 'publicar', 'generar', 'crear', 'imaginar', // Spanish, Portuguese
+            'envoyer', 'publier', 'générer', 'créer', 'imaginer', // French
+            'absenden', 'senden', 'veröffentlichen', 'generieren', 'erstellen', // German
+            '发送', '发布', '生成', '创建', // Chinese (Simplified)
+            '發送', '發布', '生成', '創建', // Chinese (Traditional)
+            '送信', '投稿', '生成', '作成', '画像を作る', '画像生成', '作成する', // Japanese
+            'отправить', 'сгенерировать', 'создать', // Russian
+            'gönder', 'yayınla', 'oluştur', 'yarat', // Turkish
+            'kirmizi', 'kirim', 'buat', 'menghasilkan', // Indonesian
+            'versturen', 'plaatsen', 'bepalen', 'maken', 'genereren', // Dutch
+            'invia', 'pubblica', 'genera', 'crea', 'immagina', // Italian
+            'wyslij', 'wyślij', 'opublikuj', 'generuj', 'utwórz', // Polish
+            'trimitere', 'publica', 'generează', 'creează', // Romanian
+            'skicka', 'publicera', 'generera', 'skapa', // Swedish
+            'gửi', 'đăng', 'tạo', 'phát sinh', // Vietnamese
+            'odeslat', 'zveřejnit', 'vygenerovat', 'vytvořit', // Czech
+            'küldés', 'közzététel', 'generálás', 'létrehozás', // Hungarian
+            'إرسال', 'نشر', 'توليد', 'إنشاء', // Arabic
+            'ارسال', 'انتشار', 'تولید', 'ایجاد', // Persian (Farsi)
+            'bago', 'ipadala', 'bumuo', 'lumikha', // Filipino (Tagalog) - 'ipadala' = send
+            '보내기', '게시', '생성', '만들기', // Korean
+            'भेजें', 'post', 'जनरेट', 'बनाएं', // Hindi
+            'পাঠান', 'post', 'তৈরি', 'সৃষ্টি', // Bengali
+            'पाठवा', 'व्युत्पन्न', 'तयार करा', // Marathi
+            'அனுப்பு', 'உருவாக்கு', // Tamil
+            'ப public', 'సృష్టించు', // Tamil (likely post/publish context dependent, keeping simple)
             'pampishandi', // Telugu (approx) -> 'pampinku' is send
             'nadisonla', // Telugu
             'відправити', 'опублікувати' // Ukrainian
@@ -50,7 +50,7 @@ if (window.GrokLoopInjected) {
         makeVideo: [
             'make video', 'generate', 'create video', // English
             'crear video', 'generar', // Spanish
-            'créer une vidéo', 'générer', // French
+            'créer une vidéo', 'faire une vidéo', 'générer', // French
             'video erstellen', 'generieren', // German
             '生成视频', '制作视频', // Chinese (Simplified)
             '生成影片', '製作影片', // Chinese (Traditional)
@@ -229,37 +229,37 @@ if (window.GrokLoopInjected) {
             'відтворити', 'спробувати ще раз' // Ukrainian
         ],
         upscale: [
-            'upscale', 'enhance', 'hd', 'high definition', 'alta definizione', // English & generic
-            'escalar', 'mejorar vídeo', 'mejorar video', 'optimizar', // Spanish
-            'rehausser', 'améliorer la vidéo', 'améliorer', 'optimiser', // French
-            'hochskalieren', 'verbessern', 'optimieren', // German
-            '放大', '增强', '升级', '超分', '优化', '高清', // Chinese (Simplified)
-            '升級', '升級影片', '高清', // Chinese (Traditional)
-            'アップスケール', '高画質化', '強化', '改善', 'ハイビジョン', // Japanese
-            'улучшить', 'масштабировать', 'оптимизировать', 'hd', // Russian
-            'melhorar', 'otimizar', 'alta definição', // Portuguese
-            'iyileştir', 'hd', // Turkish
-            'tingkatkan', 'hd', // Indonesian
-            'opschalen', 'hd', // Dutch
-            'migliora', 'ottimizza video', 'alta definizione', // Italian
-            'skaluj', 'ulepsz', 'hd', // Polish
-            'îmbunătățește', 'hd', // Romanian
-            'uppskala', 'hd', // Swedish
-            'nâng cấp', 'hd', // Vietnamese
-            'zvětšit', 'vylepšit', 'hd', // Czech
-            'javítás', 'felskálázás', 'hd', // Hungarian
-            'تحسين', 'hd', // Arabic
-            'ارتقا', 'hd', // Persian
-            'pabutihin', 'hd', // Filipino
-            '업스케일', '향상', 'hd', // Korean
-            'sudhare', 'hd', // Hindi
-            'unnoto', // Bengali
-            'vadhva', // Marathi
-            'mempat', // Tamil
-            'penchu', // Telugu
-            'покращити' // Ukrainian
+            'upscale', 'enhance', 'hd', 'high definition', 'alta definizione', 'increase video resolution', // English & generic
+            'escalar', 'mejorar vídeo', 'mejorar video', 'optimizar', 'aumentar la resolución del vídeo', // Spanish
+            'rehausser', 'améliorer la vidéo', 'améliorer la video', 'améliorer', 'optimiser', 'augmenter la résolution', 'résolution', 'haute définition', 'mise à niveau de la vidéo', 'mise à niveau', // French
+            'hochskalieren', 'video hochskalieren', 'verbessern', 'optimieren', 'videoauflösung erhöhen', // German — verified: Video hochskalieren
+            '放大', '增强', '升级', '升级视频', '超分', '优化', '高清', '提高视频分辨率', '画质增强', // Chinese (Simplified) — verified: 升级视频
+            '升級', '升級影片', '高清', '提高影片解析度', '畫質增強', // Chinese (Traditional)
+            'アップスケール', 'アップスケールビデオ', '高画質化', '強化', '改善', 'ハイビジョン', 'ビデオの解像度を上げる', // Japanese — verified: アップスケールビデオ
+            'улучшить', 'масштабировать', 'масштабирование', 'масштабирование видео', 'оптимизировать', 'увеличить разрешение видео', 'hd', // Russian — verified: Масштабирование видео
+            'melhorar', 'otimizar', 'upscale vídeo', 'alta definição', 'aumentar a resolução do vídeo', // Portuguese — verified: Upscale vídeo
+            'iyileştir', 'video çözünürlüğünü artır', 'hd', // Turkish
+            'tingkatkan', 'tingkatkan resolusi video', 'hd', // Indonesian
+            'opschalen', 'videoresolutie verhogen', 'hd', // Dutch
+            'migliora', 'ottimizza video', 'alta definizione', 'aumenta la risoluzione del video', // Italian
+            'skaluj', 'ulepsz', 'zwiększ rozdzielczość wideo', 'hd', // Polish
+            'îmbunătățește', 'crește rezoluția videoclipului', 'hd', // Romanian
+            'uppskala', 'öka videoupplösningen', 'hd', // Swedish
+            'nâng cấp', 'tăng độ phân giải video', 'hd', // Vietnamese
+            'zvětšit', 'zvětšit video', 'vylepšit', 'zvýšit rozlišení videa', 'hd', // Czech — verified: Zvětšit video
+            'javítás', 'felskálázás', 'videó felbontásának növelése', 'hd', // Hungarian
+            'تحسين', 'ترقية', 'ترقية الفيديو', 'زيادة دقة الفيديو', 'hd', // Arabic — verified: ترقية الفيديو
+            'ارتقا', 'افزایش وضوح ویدیو', 'hd', // Persian
+            'pabutihin', 'pataasin ang resolusyon ng video', 'hd', // Filipino
+            '업스케일', '향상', '비디오 해상도 높이기', 'hd', // Korean
+            'sudhare', 'वीडियो रिज़ॉल्यूशन बढ़ाएं', 'hd', // Hindi
+            'unnoto', 'ভিডিও রেজোলিউশন বাড়ান', // Bengali
+            'vadhva', 'व्हिडिओ रिझोल्यूशन वाढवा', // Marathi
+            'mempat', 'வீடியோ தெளிவுத்திறனை அதிகரிக்கவும்', // Tamil
+            'penchu', 'వీடியோ రిజల్యూషన్‌ను పెంచండి', // Telugu
+            'покращити', 'збільшити роздільну здатність відео' // Ukrainian
         ],
-        more: ['more', 'options', 'más', 'plus', 'mehr', '更多', 'その他', 'еще', 'mais', 'daha', 'lainnya', 'meer', 'altro', 'więcej', 'mai mult', 'mer', 'thêm', 'více', 'több', 'المزيد', 'بیشتر', 'higit pa', '더 보기', 'aur', 'aro', 'ankhin', 'melum', 'marian', 'ще'],
+        more: ['more', 'options', 'más', 'plus', 'mehr', '更多', 'その他', 'еще', 'mais', 'daha', 'lainnya', 'meer', 'altro', 'altre', 'opzioni', 'więcej', 'mai mult', 'mer', 'thêm', 'více', 'több', 'المزيد', 'بیشتر', 'higit pa', '더 보기', 'aur', 'aro', 'ankhin', 'melum', 'marian', 'ще'],
         edit: ['edit', 'change', 'modify', 'editar', 'modifier', 'bearbeiten', '编辑', '編集', 'изменить', 'düzenle', 'ubah', 'bewerken', 'modifica', 'edytuj', 'editează', 'redigera', 'chỉnh sửa', 'upravit', 'szerkesztés', 'تعديل', 'ویرایش', 'i-edit', '편집', 'badle', 'sompadon', 'badla', 'thiruthu', 'marpp', 'redahuvat'],
         skip: ['skip', 'pass', 'saltar', 'passer', 'überspringen', '跳过', 'スキップ', 'пропустить', 'pular', 'atla', 'lewati', 'overslaan', 'salta', 'pomiń', 'sari', 'hoppa över', 'bỏ qua', 'přeskočit', 'kihagyás', 'تخطي', 'رد شدن', 'laktawan', '건너뛰기', 'chode', 'bad din', 'soda', 'thavir', 'vadul', 'пропустити'],
         rateLimit: [
@@ -272,6 +272,31 @@ if (window.GrokLoopInjected) {
             'レート制限', '上限に達しました', // Japanese
             'превышен лимит', 'слишком много запросов', // Russian
             'limite de taxa', 'demasiadas solicitações' // Portuguese
+        ],
+        extend: [
+            'extend', 'extend video', 'continue video', // English
+            'extender', 'extender vídeo', 'continuar vídeo', // Spanish
+            'prolonger', 'prolonger la vidéo', 'étendre', 'étendre la vidéo', // French — verified: Étendre la vidéo
+            'verlängern', 'video verlängern', 'erweitern', 'video erweitern', // German — verified: Video erweitern
+            '延长', '延长视频', '延伸', '继续', '扩展', '扩展视频', // Chinese (Simplified) — verified: 扩展视频
+            '延長', '延長影片', '擴展', '擴展影片', // Chinese (Traditional) — verified: 擴展影片
+            '延長する', '動画を延長', '拡張', '動画を拡張', // Japanese — verified: 動画を拡張
+            'продлить', 'продлить видео', // Russian
+            'uzat', 'videoyu uzat', // Turkish
+            'perpanjang', 'perpanjang video', // Indonesian
+            'verlengen', // Dutch
+            'estendi', 'estendere video', // Italian
+            'wydłuż', 'przedłuż', // Polish
+            'extinde', // Romanian
+            'förläng', // Swedish
+            'kéo dài', // Vietnamese
+            'prodloužit', 'rozšířit', 'rozšířit video', // Czech — verified: Rozšířit video
+            'meghosszabbít', // Hungarian
+            'تمديد', 'تمديد الفيديو', // Arabic — verified: تمديد الفيديو
+            'تمدید', // Persian
+            '연장', '영상 연장', // Korean
+            'estender', 'estender vídeo', // Portuguese
+            'подовжити' // Ukrainian
         ],
         imagineMode: [
             'imagine', 'video', 'vídeo', 'vidéo', 'визуализировать', 'ভিডিও', 'വീഡിയോ', 'vidéo',
@@ -450,13 +475,11 @@ if (window.GrokLoopInjected) {
             } else {
                 element.value = text;
             }
-            
-            // Dispatch ALL the events React might be listening for
+
+            // Dispatch ONLY input/change events React might be listening for to register the text. 
+            // DO NOT dispatch KeyboardEvents as they trigger implicit form submission in Grok's new UI.
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
-            element.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, data: text }));
-            element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'a', keyCode: 65 }));
-            element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a', keyCode: 65 }));
         } else {
             // For contentEditable, also dispatch input event
             element.dispatchEvent(new Event('input', { bubbles: true }));
@@ -472,6 +495,15 @@ if (window.GrokLoopInjected) {
     async function simulateClick(element) {
         if (!element) return;
         element.focus();
+
+        // Dispatch modern pointer/mouse events (React/Radix dropdowns often rely on pointerdown or a full bubbling click event)
+        element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, view: window }));
+        element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+
+        // Fallback to native click just in case
         element.click();
     }
 
@@ -596,7 +628,7 @@ if (window.GrokLoopInjected) {
         await new Promise(r => setTimeout(r, 2000));
     }
 
-    async function sendPromptToGrok(text) {
+    async function sendPromptToGrok(text, options = {}) {
         await new Promise(r => setTimeout(r, 1000)); // Reduced initial pause
 
         let inputArea = null;
@@ -608,20 +640,24 @@ if (window.GrokLoopInjected) {
             console.log(`Searching for input area (${attempt + 1}/${maxRetries})...`);
 
             // 0. Ensure Imagine Mode is active (Feb 2026 UI)
-            const imagineBtn = Array.from(document.querySelectorAll('button')).find(b => {
-                // EXTREMELY IMPORTANT: Do not click the main Grok "Imagine" app icon in the sidebar nav
-                if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
-
-                const text = (b.innerText || b.textContent || b.ariaLabel || b.title || '').toLowerCase();
-                // Match translations for "Imagine", "Video", "Vídeo" etc.
-                return TRANSLATIONS.imagineMode.some(k => text.includes(k));
-            });
-            if (imagineBtn && !imagineBtn.classList.contains('active') && !imagineBtn.getAttribute('aria-selected')) {
-                // Heuristic to avoid clicking the wrong "Video" button. The mode toggle is usually a small button or a dropdown.
-                // We'll trust the selector.
-                console.log('Activating Imagine/Video mode...');
-                await simulateClick(imagineBtn);
-                await new Promise(r => setTimeout(r, 1000));
+            // NOTE: This is a safety check. The primary activation now happens
+            // in processSegment BEFORE image upload. This catches text-only segments.
+            // SKIP when in Extend mode — clicking this navigates away from the Extend compose area!
+            if (!options.skipImagineMode) {
+                const imagineBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                    if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
+                    if (b.offsetParent === null) return false;
+                    const btnText = (b.innerText || b.textContent || b.ariaLabel || b.title || '').toLowerCase().trim();
+                    if (TRANSLATIONS.makeVideo.some(k => btnText.includes(k))) return false;
+                    return TRANSLATIONS.imagineMode.some(k => btnText === k || btnText.includes(k));
+                });
+                if (imagineBtn && !imagineBtn.classList.contains('active') && !imagineBtn.getAttribute('aria-selected')) {
+                    console.log('Activating Imagine/Video mode (safety check in sendPromptToGrok)...');
+                    await simulateClick(imagineBtn);
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            } else {
+                console.log('[sendPromptToGrok] Skipping imagineMode activation (Extend mode).');
             }
 
             // 1. Precise selectors (Updated for Feb 2026)
@@ -674,7 +710,7 @@ if (window.GrokLoopInjected) {
         await insertTextFast(inputArea, text);
 
         // NEW (March 2026): Validate text was actually inserted
-        await new Promise(r => setTimeout(r, 800)); // Increased from 500ms
+        await new Promise(r => setTimeout(r, 1200)); // Give React enough time to sync state
         const insertedText = inputArea.textContent || inputArea.value || '';
         if (!insertedText || !insertedText.includes(text.substring(0, Math.min(20, text.length)))) {
             console.warn('[Content] Text insertion validation failed. Retrying...');
@@ -690,7 +726,6 @@ if (window.GrokLoopInjected) {
             await simulateEnterKey(inputArea);
 
             await new Promise(r => setTimeout(r, 1000));
-            // Success check: Input detached or cleared?
             if (!inputArea.isConnected || (inputArea.value || inputArea.textContent || '').trim() === '') {
                 console.log('Strict Enter submission successful.');
                 return;
@@ -712,53 +747,70 @@ if (window.GrokLoopInjected) {
         console.log('Legacy Mode: Searching for Send button...');
 
         let sendBtn = null;
+        // Scope ALL button searches to the compose area to avoid accidentally clicking gallery buttons
+        const composeArea = document.querySelector('form') || document.querySelector('[role="textbox"]')?.closest('div.group\\/composer') || document;
 
         for (let i = 0; i < 20; i++) {
-            // Find SVG arrow path, climb up to parent button
-            const arrowPaths = Array.from(document.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
-            
-            for (const path of arrowPaths) {
-                const svg = path.closest('svg');
-                if (svg) {
-                    sendBtn = svg.closest('button[type="submit"]');
-                    if (sendBtn && !sendBtn.disabled) break;
+            // PRIORITY 1: Check for "Make Video" / "Faire une vidéo" button.
+            // When an image is uploaded, Grok shows this button as the video submission mechanism.
+            // SKIP this when in Extend mode (options.skipMakeVideo) — Extend has its own Send button.
+            if (!sendBtn && !options.skipMakeVideo) {
+                const makeVideoBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                    if (b.offsetParent === null) return false;
+                    if (b.closest('nav') || b.closest('aside')) return false;
+                    const text = (b.innerText || b.textContent || '').toLowerCase().trim();
+                    return TRANSLATIONS.makeVideo.some(k => text.includes(k)) && !b.disabled;
+                });
+                if (makeVideoBtn) {
+                    console.log('Found "Make Video" button — using it for video submission:', makeVideoBtn.innerText.trim());
+                    sendBtn = makeVideoBtn;
                 }
             }
-            
-            // Fallback: aria-label match
+
+            // PRIORITY 2: Find SVG arrow path inside compose area only
             if (!sendBtn) {
-                sendBtn = document.querySelector('button[aria-label*="submit" i]:not([disabled]), button[aria-label*="send" i]:not([disabled])');
+                const arrowPaths = Array.from(composeArea.querySelectorAll('svg path[d*="M6 11L12 5"], svg path[d*="M12 5L18 11"], svg path[d*="M12 5V19"]'));
+                for (const path of arrowPaths) {
+                    const svg = path.closest('svg');
+                    if (svg) {
+                        sendBtn = svg.closest('button[type="submit"]');
+                        if (!sendBtn) sendBtn = svg.closest('button');
+                        if (sendBtn && !sendBtn.disabled && composeArea.contains(sendBtn)) break;
+                        else sendBtn = null;
+                    }
+                }
+            }
+
+            // PRIORITY 3: Fallback — search all buttons in compose area using TRANSLATIONS.send
+            if (!sendBtn) {
+                const candidates = Array.from(composeArea.querySelectorAll('button:not([disabled])'));
+
+                sendBtn = candidates.find(b => {
+                    const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+                    const title = (b.title || '').toLowerCase();
+                    const btnText = (b.innerText || b.textContent || '').trim().toLowerCase();
+
+                    // EXCLUDE "Edit" buttons — they appear after image upload and are NOT the Send button
+                    if (aria.includes('edit') || btnText.includes('edit')) return false;
+
+                    return TRANSLATIONS.send.some(k => aria.includes(k) || title.includes(k) || btnText === k) ||
+                        b.type === 'submit';
+                });
             }
 
             if (sendBtn && !sendBtn.disabled) {
-                console.log('Found enabled Send button. Clicking...', sendBtn.tagName, sendBtn.ariaLabel);
-                
-                // Wait for React to bind handler
-                await new Promise(r => setTimeout(r, 300));
-                
-                // Simple native click
+                console.log('Found enabled Send button. Clicking...', sendBtn.tagName, sendBtn.getAttribute('aria-label') || sendBtn.innerText.trim().substring(0, 30));
+
                 sendBtn.focus();
                 sendBtn.click();
-                
-                console.log('Click dispatched, waiting for generation...');
-                await new Promise(r => setTimeout(r, 2000));
-                
-                // Verify
-                const generationStarted = document.querySelector('[class*="generating" i], [class*="loading" i], video, img[src*="blob:"]');
-                if (!generationStarted) {
-                    console.warn('Click did not trigger! Trying Enter fallback...');
-                    inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
-                } else {
-                    console.log('Send button click successful!');
-                }
+
+                console.log('Click dispatched. Trusting button click — no Enter fallback to avoid double submission.');
                 return;
             }
             await new Promise(r => setTimeout(r, 500));
         }
 
-        // Fallback: Enter key
-        console.warn('Button not found, using Enter key...');
-        inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, keyCode: 13, key: 'Enter' }));
+        console.warn('Button not found after 10 seconds. Assuming prompt was sent via other means or UI is stuck.');
     }
 
     async function clearInputAttachments() {
@@ -938,7 +990,7 @@ if (window.GrokLoopInjected) {
                 const hasAnyVideo = document.querySelectorAll('video').length > 0;
                 const hasCompletedImage = document.querySelectorAll('img[src*="blob:"], img[src*="grok"], img[src*="imagine"]').length > 0;
                 const hasAnyContent = hasAnyVideo || hasCompletedImage;
-                
+
                 // If content exists, regenerate button is NORMAL (user can regenerate if they don't like it)
                 if (hasAnyContent) {
                     // Do NOT trigger moderation - regenerate button is expected when content exists
@@ -1000,7 +1052,7 @@ if (window.GrokLoopInjected) {
         });
     }
 
-    async function upscaleVideo() {
+    async function upscaleVideo(newVideoSrc = null) {
         await new Promise(r => setTimeout(r, 2000)); // Wait for UI to settle
 
         // 1. Scope Search to Main Content Area (to avoid Sidebar)
@@ -1048,7 +1100,35 @@ if (window.GrokLoopInjected) {
 
         let upscaleBtn = null;
 
-        // 1. Try finding 'Upscale' directly via translations (maybe it's already visible)
+        const findUpscaleInDOM = () => {
+            const items = [];
+            // Scan ALL visible elements for upscale text, then walk up to clickable ancestor.
+            // No leaf-node filter — menu items often have child elements (icon + text span).
+            const allEls = Array.from(document.querySelectorAll('*'));
+            for (const el of allEls) {
+                if (el.closest('nav') || el.closest('aside') || el.closest('[class*="history" i]')) continue;
+                const s = window.getComputedStyle(el);
+                if (s.display === 'none' || s.visibility === 'hidden') continue;
+                const r = el.getBoundingClientRect();
+                if (r.width === 0 || r.height === 0) continue;
+                const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+                if (text.length === 0 || text.length > 60) continue;
+
+                items.push(text);
+
+                if (TRANSLATIONS.upscale.some(k => text.includes(k)) || text === 'hd') {
+                    // Walk up to the closest clickable ancestor
+                    const clickable = el.closest('[role="menuitem"], [role="option"], button, [role="button"], li, a');
+                    console.log(`[Upscale] DOM scan match: "${text}" -> clicking:`, (clickable || el).tagName);
+                    return clickable || el;
+                }
+            }
+
+            console.log('[Upscale] ⚠️ Upscale string not found in expanded menu! Valid menu strings seen:', JSON.stringify(Array.from(new Set(items)).slice(0, 20)));
+            return null;
+        };
+
+        // Phase 1: Check if upscale/HD button is already directly visible
         console.log('Searching for Upscale button directly...');
         upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, mainContent);
 
@@ -1059,7 +1139,6 @@ if (window.GrokLoopInjected) {
                 if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside')) return false;
                 if (b.offsetParent === null) return false;
                 const text = (b.innerText || b.ariaLabel || b.title || '').trim().toLowerCase();
-                // Look for standalone "HD" button (not part of other text)
                 return text === 'hd' || (text.length <= 4 && text.includes('hd'));
             });
             if (hdBtn) {
@@ -1068,11 +1147,100 @@ if (window.GrokLoopInjected) {
             }
         }
 
+        // Phase 2: Ensure we're on the post detail page, then reveal hidden buttons and search
         if (!upscaleBtn) {
-            console.log('Upscale button not found directly. Checking menus...');
+            console.log('[Upscale] Direct button not found. Starting Phase 2 exhaustive search...');
 
-            // NEW HEURISTIC: Find the specific "Video Settings" button with the ... SVG or text
-            // The user provided the HTML for the exact new button: it contains a specific SVG or the literal characters "..."
+            // DIAGNOSTIC: Dump all buttons and opacity-0 elements so we know what's in the DOM
+            const opacity0Count = mainContent.querySelectorAll('[class*="opacity-0"]').length;
+            console.log(`[Upscale-Diag] opacity-0 elements in mainContent: ${opacity0Count}`);
+            const allMainBtns = Array.from(mainContent.querySelectorAll('button, [role="button"]'));
+            console.log(`[Upscale-Diag] Total buttons in mainContent: ${allMainBtns.length}`);
+            allMainBtns.slice(0, 20).forEach((b, i) => {
+                const text = (b.innerText || b.textContent || '').trim().substring(0, 20);
+                const aria = b.getAttribute('aria-label') || '';
+                const op = b.offsetParent;
+                console.log(`[Upscale-Diag] btn[${i}]: text="${text}" aria="${aria}" offsetParent=${op ? op.tagName : 'NULL'} class="${b.className.substring(0, 50)}"`);
+            });
+
+            // Inject CSS to reveal Tailwind opacity-0 / invisible action buttons
+            const revealStyle = document.createElement('style');
+            revealStyle.id = '__grok-upscale-reveal';
+            revealStyle.textContent = '[class*="opacity-0"] { opacity: 1 !important; pointer-events: auto !important; } [class*="invisible"] { visibility: visible !important; }';
+            document.head.appendChild(revealStyle);
+            await new Promise(r => setTimeout(r, 400)); // let the browser repaint
+
+            try {
+                // Find the EXACT video that was just generated using its src URL.
+                // This avoids clicking buttons on unrelated old video cards in the gallery.
+                let targetVideo = newVideoSrc
+                    ? Array.from(document.querySelectorAll('video')).find(v => v.src === newVideoSrc)
+                    : null;
+                if (!targetVideo) {
+                    // Fallback: last visible video
+                    const allVideos = Array.from(mainContent.querySelectorAll('video')).filter(v => v.src && v.offsetParent !== null);
+                    targetVideo = allVideos[allVideos.length - 1];
+                }
+                console.log('[Upscale] Target video:', targetVideo ? `found (src: ${(targetVideo.src || '').substring(0, 60)})` : 'not found');
+
+                // Video player control labels to EXCLUDE (the video player has its own "More" button)
+                const playerControlLabels = ['play', 'pause', 'mute', 'unmute', 'volume', 'fullscreen', 'captions', 'subtitles', 'settings', 'picture-in-picture', 'pip', 'speed'];
+                const isPlayerControl = (b) => {
+                    const text = (b.innerText || b.textContent || b.getAttribute('aria-label') || b.title || '').trim().toLowerCase();
+                    if (/^\d+:\d+/.test(text)) return true; // timestamp like "0:00 / 0:06"
+                    return playerControlLabels.some(k => text.includes(k));
+                };
+
+                if (targetVideo) {
+                    // Find ALL "More" (...) buttons in the main content area that are NOT player controls.
+                    // Since targetVideo is the most recently generated video (at the bottom of the list),
+                    // its corresponding "More options" button should be the LAST one in the DOM.
+                    const allMoreBtns = Array.from(mainContent.querySelectorAll('button, [role="button"]')).filter(b => {
+                        if (b.closest('nav') || b.closest('aside') || b.closest('[class*="history" i]')) return false;
+
+                        // NEW FIX: Never click buttons inside the compose/input area (e.g. aspect ratio, add attachment)
+                        if (b.closest('form') || b.closest('[role="textbox"]') || b.closest('[class*="composer" i]') || b.closest('.group\\/composer') || (b.title || '').includes('aspect')) return false;
+
+                        if (b.offsetParent === null) return false;
+                        if (isPlayerControl(b)) return false; // Exclude video player's "More" button
+
+                        const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+                        const title = (b.title || '').toLowerCase();
+                        const text = (b.innerText || b.textContent || '').trim().toLowerCase();
+
+                        return TRANSLATIONS.more.some(k => aria.includes(k) || title.includes(k)) || text === '...' || text === '…';
+                    });
+
+                    const moreBtn = allMoreBtns[allMoreBtns.length - 1];
+
+                    if (moreBtn) {
+                        console.log(`[Upscale] Found ${allMoreBtns.length} "More" buttons. Clicking the last one...`);
+                        console.log('[Upscale] More button HTML:', moreBtn.outerHTML.substring(0, 150));
+
+                        await simulateClick(moreBtn);
+                        await new Promise(r => setTimeout(r, 800)); // Wait for menu animation
+
+                        upscaleBtn = findUpscaleInDOM();
+                        if (upscaleBtn) {
+                            console.log('[Upscale] Found "Upscale video" menu item after clicking More!');
+                        } else {
+                            // If menu didn't open or upscale not there, close menu
+                            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+                            await new Promise(r => setTimeout(r, 300));
+                        }
+                    } else {
+                        console.log('[Upscale] Specific "More" button not found in card.');
+                    }
+                }
+            } finally {
+                revealStyle.remove(); // Always remove the injected CSS
+            }
+        }
+
+        if (!upscaleBtn) {
+            console.log('[Upscale] Icon-button search failed. Falling back to original menu strategies...');
+
+            // FALLBACK: Original text/SVG-based menu button discovery
             let menuBtns = Array.from(mainContent.querySelectorAll('button, div[role="button"]')).filter(b => {
                 // EXPLICITLY ignore anything in the sidebar/history area
                 if (b.closest('nav') || b.closest('[role="navigation"]') || b.closest('aside') || b.closest('[class*="history" i]') || b.closest('[id*="history" i]')) return false;
@@ -1086,13 +1254,7 @@ if (window.GrokLoopInjected) {
                     for (let svg of svgs) {
                         const title = (svg.querySelector('title')?.textContent || '').toLowerCase();
                         if (TRANSLATIONS.more.some(k => title.includes(k))) return true;
-
-                        // Check for user-provided specific "More" SVG
-                        if (svg.classList.contains('stroke-[2]') && svg.classList.contains('transition-transform')) return true;
-
-                        // Heuristic: Does the SVG have exactly 3 circles?
-                        const circles = svg.querySelectorAll('circle');
-                        if (circles.length === 3) return true;
+                        if (svg.querySelector('circle') && svg.querySelectorAll('circle').length === 3) return true;
                     }
                 }
                 return false;
@@ -1145,18 +1307,18 @@ if (window.GrokLoopInjected) {
             // NEW (March 2026): If we found a "More options" menu button, try to expand it and search inside
             if (menuBtns.length > 0) {
                 console.log(`[Upscale] Found ${menuBtns.length} potential "More options" buttons`);
-                
+
                 for (let menuBtn of menuBtns) {
                     // Check if menu is already expanded
-                    const isExpanded = menuBtn.getAttribute('aria-expanded') === 'true' || 
-                                       menuBtn.closest('[role="menu"]:not([hidden])') ||
-                                       document.querySelector('[role="menu"]:not([hidden]) [role="menuitem"]');
-                    
+                    const isExpanded = menuBtn.getAttribute('aria-expanded') === 'true' ||
+                        menuBtn.closest('[role="menu"]:not([hidden])') ||
+                        document.querySelector('[role="menu"]:not([hidden]) [role="menuitem"]');
+
                     if (isExpanded) {
                         console.log('[Upscale] Menu already expanded, searching inside...');
                         const menu = document.querySelector('[role="menu"]:not([hidden])') || menuBtn.parentElement;
                         upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, menu);
-                        
+
                         if (!upscaleBtn) {
                             // Also check for HD in menu
                             const menuHdBtn = Array.from(menu.querySelectorAll('button, div[role="menuitem"], div[role="option"]')).find(b => {
@@ -1175,13 +1337,13 @@ if (window.GrokLoopInjected) {
                         try {
                             await simulateClick(menuBtn);
                             await new Promise(r => setTimeout(r, 500)); // Wait for menu animation
-                            
+
                             // Now search inside the expanded menu
                             const menu = document.querySelector('[role="menu"]:not([hidden])') || menuBtn.parentElement;
                             if (menu) {
                                 console.log('[Upscale] Menu expanded, searching inside...');
                                 upscaleBtn = findLocalizedBtn(TRANSLATIONS.upscale, menu);
-                                
+
                                 if (!upscaleBtn) {
                                     const menuHdBtn = Array.from(menu.querySelectorAll('button, div[role="menuitem"], div[role="option"]')).find(b => {
                                         const text = (b.innerText || b.ariaLabel || b.title || '').trim().toLowerCase();
@@ -1194,11 +1356,30 @@ if (window.GrokLoopInjected) {
                                     }
                                 }
                             }
+
+                            // Broad text scan: Grok's dropdown items may be plain divs with no role attribute.
+                            // Scan ALL visible elements for upscale-related text as a fallback.
+                            if (!upscaleBtn) {
+                                console.log('[Upscale] Role-based search failed, trying broad text scan...');
+                                upscaleBtn = Array.from(document.querySelectorAll('*')).find(el => {
+                                    // Skip elements with children that have text (we want leaf text nodes)
+                                    if (Array.from(el.children).some(c => (c.innerText || c.textContent || '').trim().length > 0)) return false;
+                                    if (el.closest('nav') || el.closest('aside') || el.closest('[class*="history" i]')) return false;
+                                    const style = window.getComputedStyle(el);
+                                    if (style.display === 'none' || style.visibility === 'hidden') return false;
+                                    const rect = el.getBoundingClientRect();
+                                    if (rect.width === 0 || rect.height === 0) return false;
+                                    const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+                                    if (text.length === 0 || text.length > 50) return false;
+                                    return TRANSLATIONS.upscale.some(k => text.includes(k)) || text === 'hd';
+                                });
+                                if (upscaleBtn) console.log('[Upscale] Found via broad text scan:', upscaleBtn.innerText || upscaleBtn.textContent);
+                            }
                         } catch (e) {
                             console.warn('[Upscale] Failed to click menu:', e);
                         }
                     }
-                    
+
                     if (upscaleBtn) break;
                 }
             }
@@ -1313,6 +1494,133 @@ if (window.GrokLoopInjected) {
         // Wait for the NEW video
         console.log('Waiting for upscaled video generation...');
         return waitForVideoResponse();
+    }
+
+    // === EXTEND VIDEO ===
+    // Clicks the "Extend" button in the More options menu.
+    // After clicking, Grok opens a compose area where the caller should insert a prompt and click Send.
+    async function extendVideo(newVideoSrc = null) {
+        await new Promise(r => setTimeout(r, 2000)); // Wait for UI to settle
+
+        const mainContent = document.querySelector('main') || document.body;
+
+        console.log('[Extend] Looking for Extend button...');
+
+        // Phase 1: Check if Extend button is directly visible
+        let extendBtn = null;
+
+        // Helper to find Extend in a scope
+        const findExtendBtn = (scope = document) => {
+            if (!scope) return null;
+            const elements = Array.from(scope.querySelectorAll('button, div[role="button"], div[role="menuitem"], div[role="option"], li, a'));
+            return elements.find(el => {
+                if (el.closest('nav') || el.closest('[role="navigation"]') || el.closest('aside')) return false;
+                if (el.offsetParent === null) return false;
+                const content = (el.innerText || el.ariaLabel || el.title || el.textContent || '').trim().toLowerCase();
+                if (content.length === 0 || content.length > 40) return false;
+                return TRANSLATIONS.extend.some(k => content === k || content.includes(k)) && !el.disabled;
+            });
+        };
+
+        // Phase 2: Open More Options menu and look for Extend
+        // This reuses the same pattern as upscaleVideo
+        const revealStyle = document.createElement('style');
+        revealStyle.id = '__grok-extend-reveal';
+        revealStyle.textContent = '[class*="opacity-0"] { opacity: 1 !important; pointer-events: auto !important; } [class*="invisible"] { visibility: visible !important; }';
+        document.head.appendChild(revealStyle);
+        await new Promise(r => setTimeout(r, 400));
+
+        try {
+            // Find the target video
+            let targetVideo = newVideoSrc
+                ? Array.from(document.querySelectorAll('video')).find(v => v.src === newVideoSrc)
+                : null;
+            if (!targetVideo) {
+                const allVideos = Array.from(mainContent.querySelectorAll('video')).filter(v => v.src && v.offsetParent !== null);
+                targetVideo = allVideos[allVideos.length - 1];
+            }
+            console.log('[Extend] Target video:', targetVideo ? `found (src: ${(targetVideo.src || '').substring(0, 60)})` : 'not found');
+
+            // Video player control labels to exclude
+            const playerControlLabels = ['play', 'pause', 'mute', 'unmute', 'volume', 'fullscreen', 'captions', 'subtitles', 'settings', 'picture-in-picture', 'pip', 'speed'];
+            const isPlayerControl = (b) => {
+                const text = (b.innerText || b.textContent || b.getAttribute('aria-label') || b.title || '').trim().toLowerCase();
+                if (/^\d+:\d+/.test(text)) return true;
+                return playerControlLabels.some(k => text.includes(k));
+            };
+
+            if (targetVideo) {
+                // Find "More options" button (same logic as upscaleVideo)
+                const allMoreBtns = Array.from(mainContent.querySelectorAll('button, [role="button"]')).filter(b => {
+                    if (b.closest('nav') || b.closest('aside') || b.closest('[class*="history" i]')) return false;
+                    if (b.closest('form') || b.closest('[role="textbox"]') || b.closest('[class*="composer" i]')) return false;
+                    if (b.offsetParent === null) return false;
+                    if (isPlayerControl(b)) return false;
+                    const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+                    const title = (b.title || '').toLowerCase();
+                    const text = (b.innerText || b.textContent || '').trim().toLowerCase();
+                    return TRANSLATIONS.more.some(k => aria.includes(k) || title.includes(k)) || text === '...' || text === '…';
+                });
+
+                const moreBtn = allMoreBtns[allMoreBtns.length - 1];
+
+                if (moreBtn) {
+                    console.log(`[Extend] Found ${allMoreBtns.length} "More" buttons. Clicking the last one...`);
+                    await simulateClick(moreBtn);
+                    await new Promise(r => setTimeout(r, 1500)); // Wait for menu to fully render
+
+                    // Diagnostic: dump all visible menu-like items so we can identify the Extend item
+                    const menuDiag = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"], [role="menu"] *, [data-radix-collection-item]'))
+                        .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none')
+                        .map(el => (el.innerText || el.textContent || '').trim())
+                        .filter(t => t.length > 0 && t.length < 60);
+                    console.log('[Extend] Menu items found after More click:', JSON.stringify(menuDiag));
+
+                    // Search the opened menu for "Extend"
+                    extendBtn = findExtendBtn();
+
+                    if (!extendBtn) {
+                        // Broad text scan — find ANY visible element matching extend text,
+                        console.log('[Extend] Primary search failed. Trying broad text scan...');
+                        const allEls = Array.from(document.querySelectorAll('*'));
+                        for (const el of allEls) {
+                            if (el.closest('nav') || el.closest('aside')) continue;
+                            const s = window.getComputedStyle(el);
+                            if (s.display === 'none' || s.visibility === 'hidden') continue;
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width === 0 || rect.height === 0) continue;
+                            const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+                            if (text.length === 0 || text.length > 50) continue;
+                            if (TRANSLATIONS.extend.some(k => text === k || text.includes(k))) {
+                                // Find the closest clickable ancestor (menuitem, button, etc.)
+                                const clickable = el.closest('[role="menuitem"], [role="option"], button, [role="button"], li, a');
+                                extendBtn = clickable || el;
+                                console.log(`[Extend] Broad scan match: "${text}" -> clicking:`, extendBtn.tagName, extendBtn.getAttribute('role') || '');
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!extendBtn) {
+                        // Close the menu
+                        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                }
+            }
+        } finally {
+            revealStyle.remove();
+        }
+
+        if (!extendBtn) {
+            console.warn('[Extend] Extend button not found.');
+            return false;
+        }
+
+        console.log('[Extend] Found Extend button. Clicking...');
+        await simulateClick(extendBtn);
+        await new Promise(r => setTimeout(r, 2000)); // Wait for compose area to appear
+        return true;
     }
 
     async function handleABTest() {
@@ -1735,6 +2043,7 @@ if (window.GrokLoopInjected) {
                 showDebugLogs: payload.showDebugLogs !== undefined ? payload.showDebugLogs : state.config.showDebugLogs,
                 showDashboard: payload.showDashboard !== undefined ? payload.showDashboard : state.config.showDashboard,
                 moderationRetryLimit: payload.moderationRetryLimit || 2,
+                filenamePrefix: payload.filenamePrefix || '',
                 initialImage: payload.hasInitialImage && storedGlobalImageUrl ? dataURItoBlob(storedGlobalImageUrl) : (payload.initialImage ? dataURItoBlob(payload.initialImage) : null)
             };
 
@@ -1953,7 +2262,7 @@ if (window.GrokLoopInjected) {
                 const inputs = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
                 const foundPlaceholder = inputs.some(el => {
                     const ph = (el.getAttribute('placeholder') || el.innerText || '').toLowerCase();
-                    return ph.includes('type to customize') || ph.includes('type to imagine') || ph.includes('customize video') || ph.includes('imagin');
+                    return ph.includes('type to customize') || ph.includes('type to imagine') || ph.includes('customize video') || ph.includes('imagin') || ph.includes('tapez pour modifier');
                 });
 
                 // 2. Button State Check (Backup)
@@ -2051,12 +2360,105 @@ if (window.GrokLoopInjected) {
                     // --- 0. Ensure Main Dashboard (Escape Post View) ---
                     // Crucial fix: If we are on an individual post from a previous segment,
                     // we MUST exit to the main gallery/compose view before doing ANYTHING.
+                    // --- EXTEND MODE BRANCH ---
+                    // When Extend is ON, segments 2-5 (index 1-4) use "Extend" from More menu
+                    // instead of extracting last frame + uploading. The flow is:
+                    //   Click Extend → insert prompt → click Send → wait for video
+                    // Segment 6+ (index >= 5) falls back to normal last-frame extraction.
+                    const useExtendForThisSegment = state.config.useExtend && index > 0 && (index % 5 !== 0) && !seg.inputImage;
+                    const isLastExtendSegment = useExtendForThisSegment && ((index % 5) === 4 || index === state.segments.length - 1);
+
+                    if (useExtendForThisSegment) {
+                        // --- EXTEND PATH ---
+                        console.log(`[Extend] Segment ${index + 1}: Using Extend mode (index ${index}, within 1-4 window)`);
+
+                        const prevVideoUrl = state.segments[index - 1]?.videoUrl;
+                        const extendSuccess = await extendVideo(prevVideoUrl);
+
+                        if (!extendSuccess) {
+                            console.warn('[Extend] Extend button not found. Falling back to normal frame extraction...');
+                            // Fall through to normal path below
+                        } else {
+                            // Extend clicked — now insert prompt and send
+                            let finalPrompt = seg.prompt || '';
+                            if (state.config.globalPrompt && state.config.globalPrompt.trim().length > 0) {
+                                const suffix = state.config.globalPrompt.trim();
+                                finalPrompt = finalPrompt ? `${finalPrompt} ${suffix}` : suffix;
+                                console.log(`Applied Global Suffix: "${suffix}" -> Final: "${finalPrompt}"`);
+                            }
+
+                            console.log(`[Extend] Sending prompt for extended Segment ${index + 1}...`);
+                            await sendPromptToGrok(finalPrompt, { skipMakeVideo: true, skipImagineMode: true });
+
+                            let videoUrl = await waitForVideoResponse();
+
+                            const abVideoUrl = await handleABTest();
+                            if (abVideoUrl) videoUrl = abVideoUrl;
+
+                            // Only upscale on the LAST extend segment (segment 5 or final segment)
+                            if (state.config.upscale && isLastExtendSegment) {
+                                try {
+                                    console.log(`[Extend] Last extend segment — upscaling...`);
+                                    const upscaledUrl = await upscaleVideo(videoUrl);
+                                    if (upscaledUrl) {
+                                        console.log('Upscale successful. Replacing video URL.');
+                                        videoUrl = upscaledUrl;
+                                    }
+                                } catch (upscaleErr) {
+                                    console.warn('Upscaling failed (skipping, using original):', upscaleErr);
+                                }
+                            } else if (state.config.upscale) {
+                                console.log(`[Extend] Skipping upscale for intermediate extend segment ${index + 1}.`);
+                            }
+
+                            seg.videoUrl = videoUrl;
+                            seg.status = 'done';
+
+                            // Only download the LAST extend segment (it contains all previous content)
+                            if (state.config.autoDownload && videoUrl && isLastExtendSegment) {
+                                try {
+                                    console.log(`Auto-downloading final extend segment ${index + 1}...`);
+                                    window.LoopManager.downloadSegment(index);
+                                } catch (dlErr) {
+                                    console.warn('Auto-download failed:', dlErr);
+                                }
+                            } else if (state.config.autoDownload && !isLastExtendSegment) {
+                                console.log(`[Extend] Skipping download for intermediate segment ${index + 1}.`);
+                            }
+
+                            // Skip proactive frame extraction for extend segments (not needed)
+                            console.log(`Segment ${index + 1} (Extend) complete.`);
+
+                            // Jump to the post-segment logic (human-like wait, etc.)
+                            // We use a flag to skip the normal path below
+                            state.currentSegmentIndex = index;
+                            this.dashboard.update();
+
+                            if (state.config.pauseAfterScene) {
+                                console.log('Pausing after scene (user setting).');
+                                state.isRunning = false;
+                                this.dashboard.update();
+                                return;
+                            }
+
+                            const humanWait = Math.ceil(Math.random() * parseInt(state.config.maxDelay || 10));
+                            console.log(`Human-like Wait: ${humanWait}s (Max: ${state.config.maxDelay}s)`);
+                            await new Promise(r => setTimeout(r, humanWait * 1000));
+
+                            console.log(`Segment ${index + 1} complete.`);
+                            state.currentSegmentIndex++;
+                            this.dashboard.update();
+                            break; // Exit retry loop, advance to next segment
+                        }
+                    }
+
+                    // --- NORMAL PATH (no Extend, or Extend fallback) ---
+
                     if (window.location.pathname.includes('/post/')) {
                         console.log('Currently in Post View. Navigating back to main compose screen...');
                         window.history.back();
                         await new Promise(r => setTimeout(r, 2000));
 
-                        // Fallback click on close/back button if history.back didn't work immediately
                         if (window.location.pathname.includes('/post/')) {
                             console.log('Still in Post View. Attempting UI fallback click...');
                             const buttons = Array.from(document.querySelectorAll('button'));
@@ -2064,7 +2466,6 @@ if (window.GrokLoopInjected) {
                                 const label = (b.ariaLabel || b.title || '').toLowerCase();
                                 return label.includes('back') || TRANSLATIONS.remove.some(k => label.includes(k));
                             });
-
                             if (closeButton) {
                                 closeButton.click();
                                 await new Promise(r => setTimeout(r, 1500));
@@ -2072,12 +2473,24 @@ if (window.GrokLoopInjected) {
                         }
                     }
 
-                    // 1. Clean Input State (Likely fixes "Leaked Image" bug)
+                    // 1. Clean Input State
                     await clearInputAttachments();
 
-                    // 1. Input Image
-                    // 1. Input Image (Late Extraction for chaining)
-                    // Only extract if we are NOT reusing the global image
+                    // 1a. Activate Video mode BEFORE uploading image
+                    const imagineModeBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                        if (b.closest('nav') || b.closest('aside') || b.closest('[role="navigation"]')) return false;
+                        if (b.offsetParent === null) return false;
+                        const btnText = (b.innerText || b.textContent || b.ariaLabel || b.title || '').toLowerCase().trim();
+                        if (TRANSLATIONS.makeVideo.some(k => btnText.includes(k))) return false;
+                        return TRANSLATIONS.imagineMode.some(k => btnText === k || btnText.includes(k));
+                    });
+                    if (imagineModeBtn && !imagineModeBtn.classList.contains('active') && !imagineModeBtn.getAttribute('aria-selected')) {
+                        console.log('Activating Imagine/Video mode BEFORE image upload...');
+                        await simulateClick(imagineModeBtn);
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+
+                    // 1b. Input Image (Late Extraction for chaining)
                     if (!seg.inputImage && index > 0 && !state.config.reuseInitialImage) {
                         const prevSeg = state.segments[index - 1];
                         if (prevSeg.videoUrl) {
@@ -2096,30 +2509,19 @@ if (window.GrokLoopInjected) {
                         }
                     }
 
-                    // 1. Upload/Prepare Image
+                    // 1c. Upload/Prepare Image
                     const isFirst = (index === 0);
                     const reuseImage = state.config.reuseInitialImage;
-
-                    // Determine which image to use
-                    // Priority: 
-                    // 1. Custom Image for this segment (User Uploaded)
-                    // 2. Extracted Frame (Loop Mode) - implicitly stored in seg.inputImage by previous step
-                    // 3. Global Initial Image (If Reuse is ON, or if First Segment)
-
                     let imageToUpload = seg.inputImage;
 
-                    // Fallbacks
                     if (!imageToUpload) {
-                        if (reuseImage && state.config.initialImage) { // Only use initial image if reuse is ON and it exists
+                        if (reuseImage && state.config.initialImage) {
                             imageToUpload = state.config.initialImage;
                             console.log('[Debug-Image] Selected: Global initial image (Reuse ON)');
-                        } else if (isFirst && state.config.initialImage) { // If first segment and initial image exists
+                        } else if (isFirst && state.config.initialImage) {
                             imageToUpload = state.config.initialImage;
                             console.log('[Debug-Image] Selected: Global initial image (First Segment)');
                         } else {
-                            // Loop Mode fallback (if extraction failed or wasn't set)
-                            // FIX: Only use fallback for subsequent scenes (index > 0). 
-                            // Scene 1 should NOT inherit a stale lastGeneratedImage unless explicitly configured (reuseInitialImage handled above).
                             if (index > 0 && state.lastGeneratedImage) {
                                 console.log('[Debug-Image] Selected: Last generated frame (Fallback, Index > 0)');
                                 imageToUpload = state.lastGeneratedImage;
@@ -2144,7 +2546,6 @@ if (window.GrokLoopInjected) {
                     let finalPrompt = seg.prompt || '';
                     if (state.config.globalPrompt && state.config.globalPrompt.trim().length > 0) {
                         const suffix = state.config.globalPrompt.trim();
-                        // Append with a space if prompt is not empty
                         finalPrompt = finalPrompt ? `${finalPrompt} ${suffix}` : suffix;
                         console.log(`Applied Global Suffix: "${suffix}" -> Final: "${finalPrompt}"`);
                     }
@@ -2162,10 +2563,14 @@ if (window.GrokLoopInjected) {
                     }
 
                     // --- Upscaling (Optional) ---
-                    if (state.config.upscale) {
+                    // When Extend mode is ON, only upscale the very last segment
+                    const shouldUpscaleNormal = state.config.upscale && (
+                        !state.config.useExtend || index === state.segments.length - 1
+                    );
+                    if (shouldUpscaleNormal) {
                         try {
                             console.log('Upscaling requested. Looking for Upscale button...');
-                            const upscaledUrl = await upscaleVideo();
+                            const upscaledUrl = await upscaleVideo(videoUrl);
                             if (upscaledUrl) {
                                 console.log('Upscale successful. Replacing video URL.');
                                 videoUrl = upscaledUrl;
@@ -2190,7 +2595,10 @@ if (window.GrokLoopInjected) {
                     }
 
                     // Proactive Extraction (Only if NOT reusing initial image)
-                    if (index + 1 < state.segments.length && !state.config.reuseInitialImage) {
+                    // When Extend mode is ON, skip extraction for segments that will use Extend (next index 1-4)
+                    const nextIndex = index + 1;
+                    const nextWillUseExtend = state.config.useExtend && nextIndex > 0 && (nextIndex % 5 !== 0);
+                    if (index + 1 < state.segments.length && !state.config.reuseInitialImage && !nextWillUseExtend) {
                         const nextSeg = state.segments[index + 1];
 
                         // IMPORTANT: Do NOT overwrite if user provided a custom image!
@@ -2325,7 +2733,7 @@ if (window.GrokLoopInjected) {
                             // FIX: After moderation, Grok leaves blurred content cards on screen.
                             // We need to close these first to reset the UI state, then re-submit.
                             console.log('Clearing moderated/blurred content cards...');
-                            
+
                             // Step 1: Close all blurred content cards (click the X buttons)
                             const closeButtons = Array.from(document.querySelectorAll('button[aria-label*="close" i], button[aria-label*="dismiss" i], button[aria-label*="remove" i], .dismiss-button, [class*="close" i]'))
                                 .filter(btn => {
@@ -2334,7 +2742,7 @@ if (window.GrokLoopInjected) {
                                     const rect = btn.getBoundingClientRect();
                                     return rect.width > 20 && rect.width < 60; // Close buttons are typically small
                                 });
-                            
+
                             if (closeButtons.length > 0) {
                                 console.log(`Found ${closeButtons.length} close buttons, clicking...`);
                                 for (const btn of closeButtons) {
@@ -2349,20 +2757,20 @@ if (window.GrokLoopInjected) {
 
                             // Re-submit without navigating
                             console.log('Re-submitting prompt after moderation...');
-                            
+
                             const inputArea = document.querySelector('textarea[placeholder*="imagine"], textarea[placeholder*="Type"], div[contenteditable="true"]');
                             if (inputArea) {
                                 inputArea.textContent = '';
                                 inputArea.value = '';
-                                
+
                                 const currentSegment = state.loopData.segments[index];
                                 const promptText = currentSegment ? currentSegment.prompt : '';
-                                
+
                                 if (promptText) {
                                     console.log('Re-inserting prompt:', promptText.substring(0, 50) + '...');
                                     await insertTextFast(inputArea, promptText);
                                     await new Promise(r => setTimeout(r, 800));
-                                    
+
                                     // Use Enter key - more reliable than button click
                                     console.log('Submitting via Enter key...');
                                     inputArea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', keyCode: 13, which: 13 }));
@@ -2452,36 +2860,61 @@ if (window.GrokLoopInjected) {
 
         async downloadSegment(index) {
             const seg = state.segments[index];
-            if (seg.videoUrl) {
-                // Fetch the absolute latest prefix from storage right before downloading
-                // in case the user changed it in the popup while generating.
-                const stored = await chrome.storage.local.get('grokLoopConfig');
-                let userPrefix = '';
-                if (stored.grokLoopConfig && stored.grokLoopConfig.filenamePrefix) {
-                    userPrefix = stored.grokLoopConfig.filenamePrefix.trim();
-                }
+            if (!seg.videoUrl) return;
 
-                // If undefined or empty in storage, fallback to in-memory config prefix, or empty
-                let prefix = userPrefix || (state.config.filenamePrefix ? state.config.filenamePrefix.trim() : '');
-                const filename = `${prefix}grok_loop_segment_${index + 1}.mp4`;
+            // Fetch the absolute latest prefix from storage right before downloading
+            const stored = await chrome.storage.local.get('grokLoopConfig');
+            let userPrefix = '';
+            if (stored.grokLoopConfig && stored.grokLoopConfig.filenamePrefix) {
+                userPrefix = stored.grokLoopConfig.filenamePrefix.trim();
+            }
+            let prefix = userPrefix || (state.config.filenamePrefix ? state.config.filenamePrefix.trim() : '');
 
-                // For Blob URLs, Background script downloads randomly strip filenames and use UUIDs.
-                // Doing it via an anchor tag in the content script preserves the filename perfectly.
-                if (seg.videoUrl.startsWith('blob:')) {
-                    const a = document.createElement('a');
-                    a.href = seg.videoUrl;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    console.log(`Triggered local download for ${filename}`);
-                } else {
-                    // Fallback to background script for standard URLs (CORS handling)
-                    chrome.runtime.sendMessage({
-                        action: 'DOWNLOAD_VIDEO',
-                        payload: { url: seg.videoUrl, filename: filename }
-                    });
-                }
+            // Extend mode filename: prefix_N_M.mp4 for extended segments (e.g., 1_5, 6_10)
+            let filename;
+            if (state.config.useExtend && index > 0 && (index % 5 !== 0)) {
+                const windowStart = Math.floor(index / 5) * 5 + 1; // 1, 6, 11...
+                filename = `${prefix}grok_loop_segment_${windowStart}_${index + 1}.mp4`;
+            } else {
+                filename = `${prefix}grok_loop_segment_${index + 1}.mp4`;
+            }
+            console.log(`[Download] Segment ${index + 1}: prefix="${prefix}" filename="${filename}" url=${seg.videoUrl.substring(0, 60)}...`);
+
+            // Use background script to fetch (bypasses CORS), then anchor tag to download (preserves filename)
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage(
+                        { action: 'FETCH_VIDEO_AS_DATA_URL', payload: { url: seg.videoUrl } },
+                        (resp) => {
+                            if (resp && resp.success) resolve(resp.dataUrl);
+                            else reject(new Error(resp?.error || 'Fetch failed'));
+                        }
+                    );
+                });
+
+                // Convert Data URL to Blob for anchor download (preserves custom filename)
+                const byteString = atob(response.split(',')[1]);
+                const mimeType = response.match(/:(.*?);/)[1];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+                console.log(`[Download] Success: ${filename} (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
+            } catch (err) {
+                console.warn(`[Download] Background fetch failed, using direct download:`, err);
+                chrome.runtime.sendMessage({
+                    action: 'DOWNLOAD_VIDEO',
+                    payload: { url: seg.videoUrl, filename: filename }
+                });
             }
         }
     };

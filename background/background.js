@@ -4,19 +4,36 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'DOWNLOAD_VIDEO') {
-        chrome.downloads.download({
-            url: message.payload.url,
-            filename: message.payload.filename || 'grok_video.mp4',
-            saveAs: false // Auto-save to default folder
-        }, (downloadId) => {
-            if (chrome.runtime.lastError) {
-                console.error('Download failed:', chrome.runtime.lastError);
-                sendResponse({ success: false, error: chrome.runtime.lastError.message });
-            } else {
-                console.log('Download started:', downloadId);
-                sendResponse({ success: true, downloadId: downloadId });
-            }
-        });
+        const url = message.payload.url;
+        const filename = message.payload.filename || 'grok_video.mp4';
+
+        console.log('Fetching video to bypass Content-Disposition header for custom filename...');
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    chrome.downloads.download({
+                        url: reader.result,
+                        filename: filename,
+                        saveAs: false
+                    }, (downloadId) => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Download failed:', chrome.runtime.lastError);
+                            sendResponse({ success: false, error: chrome.runtime.lastError.message });
+                        } else {
+                            console.log('Download started with forced filename:', filename, downloadId);
+                            sendResponse({ success: true, downloadId: downloadId });
+                        }
+                    });
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(err => {
+                console.error('Fetch failed for download fallback:', err);
+                sendResponse({ success: false, error: err.message });
+            });
+
         return true; // Keep channel open for async response
     }
 

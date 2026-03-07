@@ -239,6 +239,11 @@
         <label for="upscale" style="margin: 0; cursor: pointer;">Upscale Result (High Quality)</label>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;"
+        title="Use Grok's Extend feature to chain video continuations (segments 2-5). Instead of extracting the last frame, clicks 'Extend' from the More menu. Segment 6+ falls back to normal last-frame extraction. When enabled, upscaling only applies to the last extended segment.">
+        <input type="checkbox" id="useExtend" style="width: auto; margin: 0;">
+        <label for="useExtend" style="margin: 0; cursor: pointer;">Use Extend Mode (Chain up to 5)</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;"
         title="Automatically download the video file (MP4) to your computer when finished.">
         <input type="checkbox" id="autoDownload" checked style="width: auto; margin: 0;">
         <label for="autoDownload" style="margin: 0; cursor: pointer;">Auto-Download Videos</label>

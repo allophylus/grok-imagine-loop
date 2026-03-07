@@ -6,16 +6,13 @@ This tool allows you to create seamless video sequences by automatically using t
 
 ## Recent Updates (Release Notes)
 
-**v1.6.6**
-*   **💾 Import/Export Configs:** Added ability to import and export saved configurations (presets) as JSON files. This includes saving the Global Initial Image along with your preset loops!
-*   **🖼️ Smart Resume Export:** When saving a configuration during an active run, any frames automatically extracted from your videos will be included in the export, allowing you to seamlessly pick up where you left off!
-*   **🐛 Crash Fix:** Extracted video frames are now correctly saved as Base64 in local storage during active runs, preventing them from being stripped out (resulting in missing images) when exporting configurations to JSON. 
-*   **✨ UI Refresh:** Redesigned the "Saved Configurations" section in settings for a much cleaner layout with dedicated icon buttons.
-
-**v1.6.5 (Hotfixes)**
-*   **🛠️ Upscale Reliability:** Fixed an issue where the extension failed to find the Upscale button due to Grok UI changes. It now precisely targets the new "Video Settings" SVG menu and ignores history items.
-*   **🚀 Performance Boost:** Added an 800ms debounce buffer when typing in individual Scene Prompts to completely eliminate popup UI freezing/sluggishness.
-*   **💥 Crash Fix:** Resolved the `Message exceeded maximum allowed size of 64MiB` crash. The extension no longer attempts to send massive Base64 image strings across the Chrome IPC bridge when clicking "Start Generation", and instead reads them directly from local storage.
+**v1.6.7**
+*   **🔗 Extend Mode:** New toggle to use Grok's native "Extend" feature for chaining video segments. Segments within each 5-segment window use the Extend button instead of extracting last frames, resulting in smoother continuations. Upscaling and downloading only occur on the final extended segment.
+*   **🔧 Zero-Byte Download Fix:** Fixed critical CORS bug causing all auto-downloaded videos to be 0 bytes.
+*   **🏷️ Range Filenames:** Extend segments download as `prefix_1_5.mp4` (showing segment range).
+*   **🔧 Multi-Video Fix:** Fixed duplicate/triple video generation on segment 2 caused by proactive extraction, retry loop, and "Make Video" button conflicts.
+*   **🌍 11 Verified Languages:** Upscale and Extend translations verified from real Grok screenshots:
+    English, French, German, Spanish, Portuguese, Chinese (Simplified/Traditional), Japanese, Arabic, Czech, Russian.
 
 ## Features
 
@@ -32,7 +29,8 @@ This tool allows you to create seamless video sequences by automatically using t
 *   **⇱ Side Panel Workflow:**
     *   **Native Integration:** Runs directly in the Chrome Side Panel for a seamless experience.
     *   **Optional Dashboard:** Toggle the floating on-page overlay if you prefer a clean view.
-*   **🌍 Multi-Language Support:** Fully native support for all Grok interface languages via intelligent translation mapping (no hardcoded English).
+*   **🌍 Multi-Language Support:** Fully native support for all Grok interface languages via intelligent translation mapping (no hardcoded English). Upscale and Extend verified across 11 languages.
+*   **🔗 Extend Mode:** Optionally chain video segments using Grok's native "Extend" feature instead of frame extraction, for smoother continuations and quota savings. Rolling windows of 5 segments with automatic fallback.
 *   **🛡️ Anti-Bot Protection:** 
     *   **Fast Human-Like Input:** Randomized timing but optimized for speed (Paste-like insertion).
     *   **Randomized Delays:** Unpredictable wait times to mimic human behavior.
