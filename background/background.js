@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const filename = message.payload.filename || 'grok_video.mp4';
 
         console.log('Fetching video to bypass Content-Disposition header for custom filename...');
-        fetch(url)
+        fetch(url, { cache: 'no-cache' })
             .then(response => response.blob())
             .then(blob => {
                 const reader = new FileReader();
@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === 'FETCH_VIDEO_AS_DATA_URL') {
         console.log('Fetching video blob for CORS bypass:', message.payload.url);
-        fetch(message.payload.url)
+        fetch(message.payload.url, { cache: 'no-cache' })
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return response.blob();

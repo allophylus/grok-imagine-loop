@@ -86,6 +86,57 @@
           style="height: 100px;"></textarea>
       </div>
 
+      <!-- NEW: Generation Settings (Main Panel) -->
+      <div class="input-group"
+        style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px;">
+        <label
+          style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">Generation
+          Settings</label>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Row 1: Duration & Resolution -->
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label for="duration" style="margin: 0; font-size: 11px; white-space: nowrap;">Duration:</label>
+              <select id="duration"
+                style="background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 4px; font-size: 11px; width: 60px;">
+                <option value="10s">10s</option>
+                <option value="6s" selected>6s</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label for="resolution" style="margin: 0; font-size: 11px; white-space: nowrap;">Res:</label>
+              <select id="resolution"
+                style="background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 4px; font-size: 11px; width: 65px;">
+                <option value="720p">720p</option>
+                <option value="480p" selected>480p</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: Extend Mode -->
+          <div
+            style="display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+            <label for="maxExtendSegments" style="margin: 0; font-size: 11px; white-space: nowrap;">Extend
+              Segments:</label>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <select id="maxExtendSegments"
+                style="background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 4px; font-size: 11px; width: 110px;"
+                title="0 (off) = No extension. 1-5 = Chain multiple segments.">
+                <option value="0">0 (off)</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3 (max @ 10s)</option>
+                <option value="4">4</option>
+                <option value="5">5 (max @ 6s)</option>
+              </select>
+            </div>
+            <!-- Hidden backward compat -->
+            <input type="checkbox" id="useExtend" style="display: none;">
+          </div>
+        </div>
+      </div>
+
       <!-- Scenes List (Visual & Images) -->
       <label style="margin-bottom: 8px;">Scene Details</label>
       <div id="scenes-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
@@ -232,60 +283,49 @@
 
 
 
-    <div class="input-group" style="display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Wait for and capture the High Quality upscaled version of the video.">
-        <input type="checkbox" id="upscale" checked style="width: auto; margin: 0;">
-        <label for="upscale" style="margin: 0; cursor: pointer;">Upscale Result (High Quality)</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Use Grok's Extend feature to chain video continuations (segments 2-5). Instead of extracting the last frame, clicks 'Extend' from the More menu. Segment 6+ falls back to normal last-frame extraction. When enabled, upscaling only applies to the last extended segment.">
-        <input type="checkbox" id="useExtend" style="width: auto; margin: 0;">
-        <label for="useExtend" style="margin: 0; cursor: pointer;">Use Extend Mode (Chain up to 5)</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Automatically download the video file (MP4) to your computer when finished.">
-        <input type="checkbox" id="autoDownload" checked style="width: auto; margin: 0;">
-        <label for="autoDownload" style="margin: 0; cursor: pointer;">Auto-Download Videos</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Automatically click 'Skip' if an A/B test or feedback modal appears.">
-        <input type="checkbox" id="autoSkip" checked style="width: auto; margin: 0;">
-        <label for="autoSkip" style="margin: 0; cursor: pointer;">Auto-Skip A/B Tests</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Use the Global Initial Image for EVERY scene, instead of using the previous video's last frame.">
-        <input type="checkbox" id="reuseInitialImage" style="width: auto; margin: 0;">
-        <label for="reuseInitialImage" style="margin: 0; cursor: pointer;">Reuse Initial Image (Global)</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="If checked: The loop will PAUSE if a segment fails (after retries). If unchecked: It will skip the failed segment and continue.">
-        <input type="checkbox" id="pauseOnError" checked style="width: auto; margin: 0;">
-        <label for="pauseOnError" style="margin: 0; cursor: pointer;">Pause on Error</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="If checked: Pause immediately on 'Content Moderated'. If unchecked: Retry up to Mod Retries limit.">
-        <input type="checkbox" id="pauseOnModeration" style="width: auto; margin: 0;">
-        <label for="pauseOnModeration" style="margin: 0; cursor: pointer;">Pause on Moderation</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="Show a scrolling view of the extension's internal logs in the Active Run dashboard.">
-        <input type="checkbox" id="showDebugLogs" style="width: auto; margin: 0;">
-        <label for="showDebugLogs" style="margin: 0; cursor: pointer;">Show Debug Logs</label>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;"
-        title="If checked: The loop will PAUSE after every single video generation. Used for manual review at each step.">
-        <input type="checkbox" id="pauseAfterScene" style="width: auto; margin: 0;">
-        <label for="pauseAfterScene" style="margin: 0; cursor: pointer;">Pause after every video</label>
-      </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="Automatically download the video file (MP4) to your computer when finished.">
+      <input type="checkbox" id="autoDownload" checked style="width: auto; margin: 0;">
+      <label for="autoDownload" style="margin: 0; cursor: pointer;">Auto-Download Videos</label>
     </div>
-
-
-
-    <!-- Readonly Loops Display (Hidden or Informational) -->
-    <div style="display: none;">
-      <input type="number" id="loops">
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="Automatically click 'Skip' if an A/B test or feedback modal appears.">
+      <input type="checkbox" id="autoSkip" checked style="width: auto; margin: 0;">
+      <label for="autoSkip" style="margin: 0; cursor: pointer;">Auto-Skip A/B Tests</label>
     </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="Use the Global Initial Image for EVERY scene, instead of using the previous video's last frame.">
+      <input type="checkbox" id="reuseInitialImage" style="width: auto; margin: 0;">
+      <label for="reuseInitialImage" style="margin: 0; cursor: pointer;">Reuse Initial Image (Global)</label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="If checked: The loop will PAUSE if a segment fails (after retries). If unchecked: It will skip the failed segment and continue.">
+      <input type="checkbox" id="pauseOnError" checked style="width: auto; margin: 0;">
+      <label for="pauseOnError" style="margin: 0; cursor: pointer;">Pause on Error</label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="If checked: Pause immediately on 'Content Moderated'. If unchecked: Retry up to Mod Retries limit.">
+      <input type="checkbox" id="pauseOnModeration" style="width: auto; margin: 0;">
+      <label for="pauseOnModeration" style="margin: 0; cursor: pointer;">Pause on Moderation</label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="Show a scrolling view of the extension's internal logs in the Active Run dashboard.">
+      <input type="checkbox" id="showDebugLogs" style="width: auto; margin: 0;">
+      <label for="showDebugLogs" style="margin: 0; cursor: pointer;">Show Debug Logs</label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;"
+      title="If checked: The loop will PAUSE after every single video generation. Used for manual review at each step.">
+      <input type="checkbox" id="pauseAfterScene" style="width: auto; margin: 0;">
+      <label for="pauseAfterScene" style="margin: 0; cursor: pointer;">Pause after every video</label>
+    </div>
+  </div>
+
+
+
+  <!-- Readonly Loops Display (Hidden or Informational) -->
+  <div style="display: none;">
+    <input type="number" id="loops">
+  </div>
   </div>
 
   <!-- RUN TAB (Active Dashboard) -->
@@ -295,6 +335,7 @@
       <div>
         <h3 style="margin: 0; font-size: 14px; color: #fff;">Active Run</h3>
         <span id="runStatusText" style="font-size: 11px; color: var(--success);">Running...</span>
+        <div id="quotaDisplay" style="font-size: 10px; color: #888; margin-top: 2px; display: none;"></div>
       </div>
       <button id="runStopBtn"
         style="background: #333; color: #f55; border: 1px solid #522; font-size: 11px; padding: 4px 8px;">Stop</button>

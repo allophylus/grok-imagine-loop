@@ -128,10 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const pauseOnErrorInput = document.getElementById('pauseOnError');
     const pauseOnModerationInput = document.getElementById('pauseOnModeration');
     const pauseAfterSceneInput = document.getElementById('pauseAfterScene');
-    const upscaleInput = document.getElementById('upscale');
+    const upscaleInput = document.getElementById('upscale_legacy');
     const resetInputsBtn = document.getElementById('resetInputsBtn');
     const filenamePrefixInput = document.getElementById('filenamePrefix');
     const useExtendInput = document.getElementById('useExtend');
+    const maxExtendSegmentsSelect = document.getElementById('maxExtendSegments');
+    const durationInput = document.getElementById('duration');
+    const resolutionInput = document.getElementById('resolution');
     const statusDiv = document.getElementById('status');
     const versionSpan = document.getElementById('version');
 
@@ -203,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     maxDelay: maxDelayInput.value,
                     retryLimit: retryLimitInput.value,
                     moderationRetryLimit: moderationRetryLimitInput.value,
-                    upscale: upscaleInput.checked,
+                    upscale: true, // Always enabled per user request (Fixed March 2026)
                     autoDownload: autoDownloadInput.checked,
                     autoSkip: autoSkipInput.checked,
                     reuseInitialImage: reuseInitialImageInput.checked,
@@ -592,7 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     moderationRetryLimit: moderationRetryLimitInput.value,
                     birthYear: birthYearInput.value,
                     globalPrompt: globalPromptInput.value,
-                    upscale: upscaleInput.checked,
+                    upscale: true, // Always enabled per user request
+                    useExtend: useExtendInput.checked,
+                    maxExtendSegments: parseInt(maxExtendSegmentsSelect.value, 10),
                     autoDownload: autoDownloadInput.checked,
                     autoSkip: autoSkipInput.checked,
                     reuseInitialImage: reuseInitialImageInput.checked,
@@ -657,7 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.settings.globalPrompt) globalPromptInput.value = data.settings.globalPrompt;
                 if (data.settings.filenamePrefix !== undefined && filenamePrefixInput) filenamePrefixInput.value = data.settings.filenamePrefix;
 
-                upscaleInput.checked = !!data.settings.upscale;
+                // upscaleInput.checked no longer interactive, but we still set it hidden
+                upscaleInput.checked = true;
                 autoDownloadInput.checked = !!data.settings.autoDownload;
                 autoSkipInput.checked = !!data.settings.autoSkip;
                 reuseInitialImageInput.checked = !!data.settings.reuseInitialImage;
@@ -674,6 +680,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Toggle visibility of container immediately
                     if (debugLogContainer) debugLogContainer.style.display = showDebugLogsInput.checked ? 'block' : 'none';
                 }
+                if (data.settings.useExtend !== undefined) useExtendInput.checked = data.settings.useExtend;
+                if (data.settings.maxExtendSegments !== undefined) maxExtendSegmentsSelect.value = data.settings.maxExtendSegments;
 
                 updateInitialImageLabel(); // Logic helper
                 saveConfigs(); // Persist settings
@@ -777,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
             maxDelay: maxDelayInput.value,
             retryLimit: retryLimitInput.value,
             moderationRetryLimit: moderationRetryLimitInput.value,
-            upscale: upscaleInput.checked,
+            upscale: true, // Always enabled per user request
             autoDownload: autoDownloadInput.checked,
             autoSkip: autoSkipInput.checked,
             reuseInitialImage: reuseInitialImageInput.checked,
@@ -785,13 +793,14 @@ document.addEventListener('DOMContentLoaded', () => {
             pauseOnModeration: pauseOnModerationInput.checked,
             pauseAfterScene: pauseAfterSceneInput.checked,
             showDashboard: showDashboardInput.checked,
-            pauseOnModeration: pauseOnModerationInput.checked,
-            showDashboard: showDashboardInput.checked,
             showDebugLogs: showDebugLogsInput.checked,
             birthYear: birthYearInput.value,
             globalPrompt: globalPromptInput.value,
             filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : '',
-            useExtend: useExtendInput ? useExtendInput.checked : false
+            maxExtendSegments: parseInt(maxExtendSegmentsSelect.value, 10) + 1,
+            useExtend: parseInt(maxExtendSegmentsSelect.value, 10) > 0,
+            duration: durationInput ? durationInput.value : '6s',
+            resolution: resolutionInput ? resolutionInput.value : '480p'
         };
         chrome.storage.local.set({ 'grokLoopConfig': config });
     }
@@ -827,7 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach Config Listeners
     // const pauseOnErrorInput = document.getElementById('pauseOnError'); // Moved to top
-    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, upscaleInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, filenamePrefixInput, useExtendInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput].forEach(el => {
+    [timeoutInput, maxDelayInput, retryLimitInput, moderationRetryLimitInput, autoDownloadInput, autoSkipInput, birthYearInput, globalPromptInput, filenamePrefixInput, useExtendInput, pauseOnErrorInput, pauseOnModerationInput, pauseAfterSceneInput, reuseInitialImageInput, showDashboardInput, showDebugLogsInput, maxExtendSegmentsSelect, durationInput, resolutionInput].forEach(el => {
         if (el) {
             el.addEventListener('input', saveConfigs);
             el.addEventListener('change', saveConfigs);
@@ -874,7 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (c.maxDelay) maxDelayInput.value = c.maxDelay;
             if (c.retryLimit) retryLimitInput.value = c.retryLimit;
             if (c.moderationRetryLimit) moderationRetryLimitInput.value = c.moderationRetryLimit;
-            if (c.upscale !== undefined) upscaleInput.checked = c.upscale;
+            if (c.upscale !== undefined && upscaleInput) upscaleInput.checked = c.upscale;
             if (c.autoDownload !== undefined) autoDownloadInput.checked = c.autoDownload;
             if (c.autoSkip !== undefined) autoSkipInput.checked = c.autoSkip;
             if (c.reuseInitialImage !== undefined) reuseInitialImageInput.checked = c.reuseInitialImage;
@@ -903,6 +912,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (c.globalPrompt) globalPromptInput.value = c.globalPrompt;
             if (c.filenamePrefix !== undefined && filenamePrefixInput) filenamePrefixInput.value = c.filenamePrefix;
             if (c.useExtend !== undefined && useExtendInput) useExtendInput.checked = c.useExtend;
+            if (c.maxExtendSegments !== undefined && maxExtendSegmentsSelect) maxExtendSegmentsSelect.value = c.maxExtendSegments;
+            if (c.duration !== undefined && durationInput) durationInput.value = c.duration;
+            if (c.resolution !== undefined && resolutionInput) resolutionInput.value = c.resolution;
 
             updateInitialImageLabel(); // Sync label on load
             if (c.birthYear) birthYearInput.value = c.birthYear;
@@ -1064,11 +1076,41 @@ document.addEventListener('DOMContentLoaded', () => {
             // Connection failed usually means content script isn't there
             if (errorMsg.includes("Receiving end does not exist") || errorMsg.includes("Could not establish connection")) {
                 if (attempt === 1) {
+                    // CRITICAL FIX: Before injecting, first PING the tab to check if the
+                    // content script is already running. The manifest auto-injects content.js,
+                    // and re-injecting when it's already running creates multiple instances
+                    // that each respond to START_LOOP — causing 3 simultaneous video generations.
+                    let alreadyAlive = false;
+                    try {
+                        await chrome.tabs.sendMessage(tabId, { action: 'PING' });
+                        alreadyAlive = true;
+                    } catch (_) {
+                        alreadyAlive = false;
+                    }
+
+                    if (alreadyAlive) {
+                        // Script IS running — the initial START_LOOP just had a timing issue.
+                        // Retry sending without injecting a duplicate script.
+                        console.log('[Popup] Content script is alive. Retrying message without re-injection.');
+                        await new Promise(r => setTimeout(r, 500));
+                        await sendMessageWithRetry(tabId, message, 2);
+                        return;
+                    }
+
                     statusDiv.innerText = 'Injecting script into page...';
                     try {
                         await chrome.scripting.executeScript({
                             target: { tabId: tabId },
-                            files: ['content/content.js']
+                            files: [
+                                'content/modules/logger.js',
+                                'content/modules/init.js',
+                                'content/modules/config.js',
+                                'content/modules/domUtils.js',
+                                'content/modules/upscale.js',
+                                'content/modules/extend.js',
+                                'content/modules/dashboard.js',
+                                'content/modules/loopManager.js'
+                            ]
                         });
                         // Inject CSS safely
                         chrome.scripting.insertCSS({
@@ -1134,6 +1176,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     chrome.tabs.sendMessage(tab.id, {
                         action: 'RESUME_LOOP',
                         payload: {
+                            globalPrompt: globalPromptInput.value || '',
+                            timeout: parseInt(timeoutInput.value) || 120,
+                            duration: durationInput ? durationInput.value : '6s',
+                            resolution: resolutionInput ? resolutionInput.value : '480p',
                             scenes: validScenes.map(s => ({
                                 prompt: s.prompt,
                                 hasImage: !!s.image
@@ -1180,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 maxDelay: parseInt(maxDelayInput.value) || 15,
                 retryLimit: parseInt(retryLimitInput.value) || 3,
                 moderationRetryLimit: parseInt(moderationRetryLimitInput.value) || 2,
-                upscale: upscaleInput.checked,
+                upscale: true, // Always enabled per user request
                 autoDownload: autoDownloadInput.checked,
                 autoSkip: autoSkipInput.checked,
                 reuseInitialImage: reuseInitialImageInput.checked,
@@ -1192,7 +1238,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 birthYear: birthYearInput.value || '2000',
                 globalPrompt: globalPromptInput.value || '',
                 filenamePrefix: filenamePrefixInput ? filenamePrefixInput.value : '',
-                useExtend: useExtendInput ? useExtendInput.checked : false,
+                maxExtendSegments: parseInt(maxExtendSegmentsSelect.value, 10) + 1,
+                useExtend: parseInt(maxExtendSegmentsSelect.value, 10) > 0,
+                duration: durationInput ? durationInput.value : '6s',
+                resolution: resolutionInput ? resolutionInput.value : '480p',
 
                 // NEW Payload Structure
                 scenes: validScenes.map(s => ({
@@ -1350,6 +1399,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderRunDashboard(state) {
         lastKnownState = state; // Update global tracker for Button Logic
+        const quotaDisplay = document.getElementById('quotaDisplay');
+
+        // 0. Update Quota Info
+        if (state.quotaInfo && quotaDisplay) {
+            quotaDisplay.style.display = 'block';
+            let display = 'Quota: Active';
+            try {
+                if (typeof state.quotaInfo === 'object' && state.quotaInfo !== null) {
+                    const q = state.quotaInfo;
+                    if (q.remaining !== undefined) display = `Quota Remaining: ${q.remaining}`;
+                    else if (q.limit !== undefined && q.used !== undefined) display = `Quota: ${q.limit - q.used} / ${q.limit}`;
+                    else if (q.credits !== undefined) display = `Credits: ${q.credits}`;
+                    else if (q.value !== undefined) display = `Usage: ${q.value}`;
+                    else display = `Quota info received`;
+                } else {
+                    display = `Quota: ${state.quotaInfo}`;
+                }
+            } catch (e) {
+                display = 'Quota status active';
+            }
+            quotaDisplay.innerText = display;
+        } else if (quotaDisplay) {
+            quotaDisplay.style.display = 'none';
+        }
 
         // 1. DISABLE Auto-Switch to Run Tab (User wants to stay on Main for edits)
         // if (state.segments.length > 0 && !runTab.classList.contains('active')) { ... } 
@@ -1406,7 +1479,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                     <span style="font-size:11px; font-weight:bold; color:${statusColor}">Scene ${i + 1} • ${seg.status.toUpperCase()}</span>
                 </div>
-                <div style="font-size:11px; color:#ccc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${seg.prompt}</div>
+                <div style="font-size:11px; color:#ccc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${seg.appliedPrompt || seg.prompt}">${seg.appliedPrompt || seg.prompt}</div>
+                ${seg.appliedPrompt && seg.appliedPrompt !== seg.prompt ? `<div style="font-size:9px; color:var(--primary); margin-top:2px;">(Global Suffix Applied)</div>` : ''}
             `;
 
             // Controls (Regenerate)
@@ -1479,7 +1553,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tab) {
             chrome.tabs.sendMessage(tab.id, {
                 action: 'RESUME_LOOP',
-                payload: { scenes: scenes }
+                payload: {
+                    globalPrompt: globalPromptInput.value || '',
+                    scenes: scenes
+                }
             });
         }
     };

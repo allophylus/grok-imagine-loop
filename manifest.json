@@ -40,7 +40,14 @@
         "https://grok.com/*"
       ],
       "js": [
-        "content/content.js"
+        "content/modules/logger.js",
+        "content/modules/init.js",
+        "content/modules/config.js",
+        "content/modules/domUtils.js",
+        "content/modules/upscale.js",
+        "content/modules/extend.js",
+        "content/modules/dashboard.js",
+        "content/modules/loopManager.js"
       ],
       "css": [
         "content/styles.css"
@@ -50,5 +57,17 @@
   ],
   "background": {
     "service_worker": "background/background.js"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/network_interceptor.js"
+      ],
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://grok.com/*"
+      ]
+    }
+  ]
 }

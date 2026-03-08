@@ -6,13 +6,14 @@ This tool allows you to create seamless video sequences by automatically using t
 
 ## Recent Updates (Release Notes)
 
-**v1.6.7**
-*   **🔗 Extend Mode:** New toggle to use Grok's native "Extend" feature for chaining video segments. Segments within each 5-segment window use the Extend button instead of extracting last frames, resulting in smoother continuations. Upscaling and downloading only occur on the final extended segment.
+**v1.6.7 (The Global Update)**
+*   **🌍 28+ Localized Languages:** Full screen-matched support for Arabic, Bengali, Chinese (S/T), Czech, Dutch, Filipino, French, German, Gujarati, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Marathi, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Tamil, Telugu, Turkish, Ukrainian, and Vietnamese.
+*   **✨ Imagine Mode Localized:** Full support for localized placeholders and toggles across all regions.
+*   **🔧 Initial Settings Fix:** Fixed "6s" and "480p" not applying before the first segment.
+*   **🔧 Extend Logic Fix:** Fixed segment chaining bugs and "3rd segment" regeneration issues.
+*   **🔗 Extend Mode:** New toggle to use Grok's native "Extend" feature for chaining video segments. Segments within each 5-segment window use the Extend button instead of extracting last frames.
 *   **🔧 Zero-Byte Download Fix:** Fixed critical CORS bug causing all auto-downloaded videos to be 0 bytes.
-*   **🏷️ Range Filenames:** Extend segments download as `prefix_1_5.mp4` (showing segment range).
-*   **🔧 Multi-Video Fix:** Fixed duplicate/triple video generation on segment 2 caused by proactive extraction, retry loop, and "Make Video" button conflicts.
-*   **🌍 11 Verified Languages:** Upscale and Extend translations verified from real Grok screenshots:
-    English, French, German, Spanish, Portuguese, Chinese (Simplified/Traditional), Japanese, Arabic, Czech, Russian.
+
 
 ## Features
 

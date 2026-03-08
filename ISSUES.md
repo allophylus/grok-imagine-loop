@@ -3,6 +3,10 @@
 ## 🐛 Known Issues
 - **Background Tab Throttling**: Performance slows significantly when user navigates away from grok.com/imagine tab (Chrome browser limitation)
 - **Selector Brittleness**: The extension relies on DOM selectors which may break if Grok updates their UI
+- **Prompt Insertion Reliability**: Prompt insertion sometimes fails on the first segment of a new run.
+- **Settings Toggling**: Toggling between 480p/720p and 6s/10s settings occasionally fails to register in the Grok UI.
+- **First Frame Upload Detection**: Image upload detection for the first segment sometimes fails, leaving the prompt in a persistent "pending" state.
+- **Multilingual Mode Swap**: In non-English interfaces, the extension occasionally misidentifies the "Image" vs "Video" toggle, leading to accidental image generations instead of videos.
 
 ## 💡 Feature Requests / TODO
 
@@ -10,15 +14,17 @@
 - [ ] **Safari Port**: Adapt extension for Safari Web Extensions
 - [ ] **Popup Z-Index**: Ensure all popups/modals always appear on top
 - [ ] **Fix Persistence Issues**: Add debounce for `saveScenes` and `saveConfigs` to prevent storage flooding
-- [ ] **Complete Multi-Language**: Add missing keyword translations for all supported languages
-- [ ] **Cloud Sync**: Sync settings across devices (currently local only)
-- [ ] **Custom CSS Selectors**: Allow advanced users to override selectors in settings if Grok UI changes
+## ✅ Resolved (v1.6.7)
 
-## ✅ Resolved (v1.7.0)
-
-- **X Button Misclick**: Fixed by adding stricter DOM filters to avoid clicking modal/nav close buttons; "close" alone is now rejected as too generic
+- **Massive Multilingual Support**: 11 verified languages increased to 28+ verified languages including Arabic, Bengali, Hindi, etc.
+- **Imagine Mode Localized**: Full support for localized placeholders and toggle buttons globally.
+- **Initial Settings Fix**: Fixed issue where `6s` and `480p` settings were not applied correctly before the first generation.
+- **Extend Logic Fix**: Resolved segment chaining bug (3rd segment regenerating from 1st).
+- **UI Alignment**: Fixed "Extend Segments" dropdown alignment in the popup.
+- **X Button Misclick**: Fixed by adding stricter DOM filters to avoid clicking modal/nav close buttons.
 
 ## ✅ Resolved (v1.6.1)
+
 
 - **Multi-Language Support**: Extension now supports 8 languages (EN, ES, FR, DE, ZH, JA, RU, PT)
 - **A/B Test Handling**: Automatically skips "Which video do you prefer?" survey
