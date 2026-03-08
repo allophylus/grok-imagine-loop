@@ -1,6 +1,6 @@
 # Release Notes - Grok Imagine Loop
 
-## v1.7.0 (The Global Update)
+## v1.6.7 (The Global Update)
 - **Feature: Massive Multilingual Expansion**. Integrated over **300+ new localized strings** covering 28+ languages. The extension now detects buttons and labels flawlessly across:
     - Arabic, Bengali, Chinese (Simplified/Traditional), Czech, Dutch, Filipino, French, German, Gujarati, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Marathi, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Tamil, Telugu, Turkish, Ukrainian, and Vietnamese.
 - **Feature: Localized Imagine Mode**. Added full support for localized placeholders (e.g., "اكتب لتتخيَّل") and toggle labels (e.g., "صورة" / "فيديو") for all 28+ languages.
@@ -24,7 +24,7 @@ The following languages have been meticulously screen-matched and verified for a
 | �� Tamil | �� Telugu | 🇹🇷 Turkish | 🇺🇦 Ukrainian |
 | �� Vietnamese | | | |
 
-## v1.6.7
+<!-- Consolidated into above section -->
 - **Feature:** **Import & Export Configurations**. Added the ability to export your Saved Loops (including prompts, settings, and global images) to a JSON file and import them later for easy backups and sharing.
 - **Feature:** **Smart Resume Export**. When saving a configuration during an active run, any frames automatically extracted from your videos will also be included in the export. This lets you seamlessly pick up where you left off later!
 - **Fix:** **Configuration Export Missing Frames**. Extracted video frames are now correctly saved as Base64 in local storage during active runs, preventing them from being stripped out (resulting in missing images) when exporting configurations to JSON. 
