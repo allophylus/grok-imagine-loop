@@ -5,6 +5,7 @@
     - Arabic, Bengali, Chinese (Simplified/Traditional), Czech, Dutch, Filipino, French, German, Gujarati, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Marathi, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Tamil, Telugu, Turkish, Ukrainian, and Vietnamese.
 - **Feature: Localized Imagine Mode**. Added full support for localized placeholders (e.g., "اكتب لتتخيَّل") and toggle labels (e.g., "صورة" / "فيديو") for all 28+ languages.
 - **Fix: Initial Settings Persistence**. Fixed a critical issue where "6s" and "480p" settings were not applied correctly before the first segment generation. The script now explicitly verifies and clicks these settings.
+- **Fix: Empty Prompt Filtering**. The extension now automatically filters out empty or whitespace-only lines from the Scene Prompts list. This prevents the generation loop from creating redundant "empty" segments, while still preserving scenes that have an associated image but no text.
 - **Fix: Multilingual Layout Detection**. Enhanced the "New Layout" detection logic to use localized strings for "Video" and "Image" buttons, ensuring settings are applied correctly in any interface language.
 - **Fix: Extend Chain Logic**. Resolved a bug where the 3rd segment would incorrectly regenerate from the 1st segment instead of continuing the chain.
 - **UI: Alignment Fix**. Corrected the CSS alignment for the "Extend Segments" dropdown in the popup UI.

@@ -478,47 +478,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Bulk Input Listener
-    // Bulk Input Listener
     bulkPromptsInput.addEventListener('input', () => {
-        const rawLines = bulkPromptsInput.value.split('\n');
+        let rawLines = bulkPromptsInput.value.split('\n');
 
-        // Intelligent Filter: Remove trailing empty lines ONLY if they don't map to a scene with an image
-        while (rawLines.length > 0) {
-            const lastIdx = rawLines.length - 1;
-            const line = rawLines[lastIdx];
+        // Filter: Remove empty lines UNLESS they have a corresponding image
+        // This ensures the loop doesn't try to generate from a completely empty prompt
+        const filteredLines = [];
+        const filteredScenes = [];
 
-            // If text is present, keep it.
-            if (line.trim() !== '') break;
-
-            // If text is empty...
-            const correspondingScene = scenes[lastIdx];
-            if (correspondingScene && correspondingScene.image) {
-                // Keep it (it has an image)
-                break;
-            }
-
-            // Otherwise, it's a phantom empty line. Remove it.
-            rawLines.pop();
-        }
-
-        // Sync lines to scenes
-        // 1. Update existing/Add new
         rawLines.forEach((line, i) => {
-            if (i < scenes.length) {
-                scenes[i].prompt = line;
-            } else {
-                scenes.push({ prompt: line, image: null });
+            const trimmedLine = line.trim();
+            const correspondingScene = scenes[i];
+
+            if (trimmedLine !== '' || (correspondingScene && correspondingScene.image)) {
+                filteredLines.push(line);
+                if (correspondingScene) {
+                    correspondingScene.prompt = line;
+                    filteredScenes.push(correspondingScene);
+                } else {
+                    filteredScenes.push({ prompt: line, image: null });
+                }
             }
         });
 
-        // 2. Remove extra scenes
-        if (rawLines.length < scenes.length) {
-            scenes.splice(rawLines.length);
-        }
+        // Update scenes array and preserve image associations
+        scenes = filteredScenes;
 
         saveScenes();
         renderScenes();
     });
+
 
     function autoResize(textarea) {
         textarea.style.height = 'auto';
